@@ -96,6 +96,8 @@ const OBJECT_CODES = [
   { code: "5029999099", label: "Other Maintenance and Operating Expenses" },
 ];
 
+const SUPABASE_BUCKET = "mooe-receipts"; // ← your Supabase Storage bucket name
+
 const fmt = (n) =>
   Number(n || 0).toLocaleString("en-PH", {
     minimumFractionDigits: 2,
@@ -145,6 +147,15 @@ export default function MooePage({ onBack, onLogout, user }) {
   const [remarks, setRemarks] = useState("");
   const [formError, setFormError] = useState("");
 
+  // ── RECEIPT / IMAGE UPLOAD STATE ──
+  const [receiptFiles, setReceiptFiles] = useState([]); // new files to upload (File objects)
+  const [receiptPreviews, setReceiptPreviews] = useState([]); // local preview URLs
+  const [existingReceipts, setExistingReceipts] = useState([]); // already-saved URLs from Supabase
+  const [removedReceipts, setRemovedReceipts] = useState([]); // paths to delete on save
+  const [uploading, setUploading] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState(null);
+  const fileInputRef = useRef(null);
+
   const toastTimer = useRef(null);
 
   const showToast = (msg) => {
@@ -166,13 +177,13 @@ export default function MooePage({ onBack, onLogout, user }) {
 
     const formattedData = (data || []).map((r) => ({
       ...r,
-      cy: r.cy || r.sy, // Fallback support if record was saved under old 'sy' column
+      cy: r.cy || r.sy,
       liquidatedBy: r.liquidated_by,
       dateReceived: r.date_received,
       dateLiquidated: r.date_liquidated,
+      receipts: r.receipts || [],
     }));
 
-    // SORTING LOGIC: Latest Calendar Year (CY) first. Within the same CY, sort Jan -> Dec
     const sorted = formattedData.sort((a, b) => {
       if (a.cy !== b.cy) {
         return (b.cy || "").localeCompare(a.cy || "");
@@ -247,6 +258,71 @@ export default function MooePage({ onBack, onLogout, user }) {
     if (e.key === "Enter") e.target.blur();
   };
 
+  // ── RECEIPT HANDLERS ──
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    const validFiles = files.filter((f) => f.type.startsWith("image/"));
+    if (validFiles.length !== files.length) {
+      showToast("⚠ Only image files are accepted.");
+    }
+
+    const previews = validFiles.map((f) => URL.createObjectURL(f));
+    setReceiptFiles((prev) => [...prev, ...validFiles]);
+    setReceiptPreviews((prev) => [...prev, ...previews]);
+    // reset input so same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeNewReceipt = (idx) => {
+    URL.revokeObjectURL(receiptPreviews[idx]);
+    setReceiptFiles((prev) => prev.filter((_, i) => i !== idx));
+    setReceiptPreviews((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const removeExistingReceipt = (url, storagePath) => {
+    setExistingReceipts((prev) => prev.filter((r) => r.url !== url));
+    setRemovedReceipts((prev) => [...prev, storagePath]);
+  };
+
+  // Upload new files to Supabase Storage, return array of public URLs
+  const uploadReceipts = async (cy, month) => {
+    if (!receiptFiles.length) return [];
+    const uploaded = [];
+    for (const file of receiptFiles) {
+      const ext = file.name.split(".").pop();
+      const path = `${cy}/${month}/${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2)}.${ext}`;
+      const { error } = await supabase.storage
+        .from(SUPABASE_BUCKET)
+        .upload(path, file, { upsert: false });
+
+      if (error) {
+        console.error("Upload error:", error);
+        showToast(`⚠ Failed to upload ${file.name}`);
+        continue;
+      }
+
+      const { data: pubData } = supabase.storage
+        .from(SUPABASE_BUCKET)
+        .getPublicUrl(path);
+
+      uploaded.push({ url: pubData.publicUrl, path });
+    }
+    return uploaded;
+  };
+
+  // Delete removed receipts from Supabase Storage
+  const deleteRemovedReceipts = async () => {
+    if (!removedReceipts.length) return;
+    const { error } = await supabase.storage
+      .from(SUPABASE_BUCKET)
+      .remove(removedReceipts);
+    if (error) console.error("Delete receipt error:", error);
+  };
+
   const openNew = () => {
     setMonth("");
     setRawAllocation("");
@@ -263,6 +339,13 @@ export default function MooePage({ onBack, onLogout, user }) {
     setRemarks("");
     setFormError("");
     setEditEntry(null);
+
+    // reset receipt state
+    setReceiptFiles([]);
+    setReceiptPreviews([]);
+    setExistingReceipts([]);
+    setRemovedReceipts([]);
+
     setView("form");
   };
 
@@ -294,6 +377,13 @@ export default function MooePage({ onBack, onLogout, user }) {
     setRemarks(entry.remarks || "");
     setFormError("");
     setEditEntry(entry);
+
+    // load existing receipts
+    setReceiptFiles([]);
+    setReceiptPreviews([]);
+    setExistingReceipts(entry.receipts || []);
+    setRemovedReceipts([]);
+
     setView("form");
   };
 
@@ -315,12 +405,19 @@ export default function MooePage({ onBack, onLogout, user }) {
       return;
     }
     setFormError("");
+    setUploading(true);
 
     const cy = deriveCYFromDate(dateLiquidated || dateReceived);
 
+    // Upload new receipts & delete removed ones
+    const newUploaded = await uploadReceipts(cy, month);
+    await deleteRemovedReceipts();
+
+    const allReceipts = [...existingReceipts, ...newUploaded];
+
     const payload = {
       cy,
-      sy: cy, // Populate both cy and sy columns for full database compatibility
+      sy: cy,
       month,
       allocation: numericAllocation,
       items: items.map((i) => ({
@@ -333,6 +430,7 @@ export default function MooePage({ onBack, onLogout, user }) {
       date_received: dateReceived || null,
       date_liquidated: dateLiquidated || null,
       remarks,
+      receipts: allReceipts, // array of { url, path }
     };
 
     if (editEntry?.id) {
@@ -342,6 +440,8 @@ export default function MooePage({ onBack, onLogout, user }) {
     const { error } = await supabase
       .from(MOOE_TABLE)
       .upsert(payload, { onConflict: "cy, month" });
+
+    setUploading(false);
 
     if (error) {
       console.error("Supabase save error:", error);
@@ -355,6 +455,12 @@ export default function MooePage({ onBack, onLogout, user }) {
   };
 
   const handleDelete = async (entry) => {
+    // Delete associated receipts from storage
+    const paths = (entry.receipts || []).map((r) => r.path).filter(Boolean);
+    if (paths.length) {
+      await supabase.storage.from(SUPABASE_BUCKET).remove(paths);
+    }
+
     const { error } = await supabase
       .from(MOOE_TABLE)
       .delete()
@@ -379,7 +485,6 @@ export default function MooePage({ onBack, onLogout, user }) {
   const addRow = () => setRows((prev) => [...prev, newRow()]);
   const delRow = (id) => setRows((prev) => prev.filter((r) => r.id !== id));
 
-  // Sorts options ascending: CY 2026 -> CY 2027 -> CY 2028
   const cyFilterOptions = Array.from(
     new Set([...CY_OPTIONS, ...records.map((r) => r.cy).filter(Boolean)]),
   ).sort((a, b) => a.localeCompare(b));
@@ -541,6 +646,25 @@ export default function MooePage({ onBack, onLogout, user }) {
                       </tbody>
                     </table>
                   </div>
+
+                  {/* RECEIPT THUMBNAILS IN LIST VIEW */}
+                  {r.receipts && r.receipts.length > 0 && (
+                    <div className="receipt-list-row">
+                      <span className="receipt-list-label">📎 Receipts:</span>
+                      <div className="receipt-thumb-row">
+                        {r.receipts.map((rec, idx) => (
+                          <img
+                            key={idx}
+                            src={rec.url}
+                            alt={`Receipt ${idx + 1}`}
+                            className="receipt-thumb"
+                            onClick={() => setLightboxUrl(rec.url)}
+                            title="Click to view"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -573,6 +697,21 @@ export default function MooePage({ onBack, onLogout, user }) {
                   Yes, Delete
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* LIGHTBOX */}
+        {lightboxUrl && (
+          <div className="modal-overlay" onClick={() => setLightboxUrl(null)}>
+            <div className="lightbox-box" onClick={(e) => e.stopPropagation()}>
+              <button
+                className="lightbox-close"
+                onClick={() => setLightboxUrl(null)}
+              >
+                ✕
+              </button>
+              <img src={lightboxUrl} alt="Receipt" className="lightbox-img" />
             </div>
           </div>
         )}
@@ -773,18 +912,111 @@ export default function MooePage({ onBack, onLogout, user }) {
             </div>
           </div>
 
+          {/* ── RECEIPT UPLOAD SECTION ── */}
+          <div className="section-label" style={{ marginTop: 24 }}>
+            📷 Receipt / Supporting Documents
+          </div>
+
+          {/* Existing receipts (edit mode) */}
+          {existingReceipts.length > 0 && (
+            <div className="receipt-grid">
+              {existingReceipts.map((rec, idx) => (
+                <div key={idx} className="receipt-item">
+                  <img
+                    src={rec.url}
+                    alt={`Receipt ${idx + 1}`}
+                    className="receipt-preview"
+                    onClick={() => setLightboxUrl(rec.url)}
+                    title="Click to view"
+                  />
+                  <button
+                    className="receipt-remove"
+                    onClick={() => removeExistingReceipt(rec.url, rec.path)}
+                    title="Remove"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* New receipt previews */}
+          {receiptPreviews.length > 0 && (
+            <div className="receipt-grid">
+              {receiptPreviews.map((url, idx) => (
+                <div key={idx} className="receipt-item receipt-item-new">
+                  <img
+                    src={url}
+                    alt={`New receipt ${idx + 1}`}
+                    className="receipt-preview"
+                    onClick={() => setLightboxUrl(url)}
+                    title="Click to view"
+                  />
+                  <button
+                    className="receipt-remove"
+                    onClick={() => removeNewReceipt(idx)}
+                    title="Remove"
+                  >
+                    ✕
+                  </button>
+                  <div className="receipt-new-badge">NEW</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            style={{ display: "none" }}
+            onChange={handleFileSelect}
+          />
+          <button
+            className="btn-upload-receipt"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            📎 {uploading ? "Uploading..." : "Attach Receipt Photos"}
+          </button>
+          <div className="receipt-hint">
+            Accepted: JPG, PNG, WEBP. Multiple files allowed.
+          </div>
+
           {formError && <div className="form-error">⚠ {formError}</div>}
 
           <div className="form-footer">
             <button className="btn-cancel" onClick={() => setView("list")}>
               Cancel
             </button>
-            <button className="btn-primary" onClick={handleSave}>
-              💾 Save Entry
+            <button
+              className="btn-primary"
+              onClick={handleSave}
+              disabled={uploading}
+            >
+              {uploading ? "⏳ Saving..." : "💾 Save Entry"}
             </button>
           </div>
         </div>
       </div>
+
+      {/* LIGHTBOX */}
+      {lightboxUrl && (
+        <div className="modal-overlay" onClick={() => setLightboxUrl(null)}>
+          <div className="lightbox-box" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="lightbox-close"
+              onClick={() => setLightboxUrl(null)}
+            >
+              ✕
+            </button>
+            <img src={lightboxUrl} alt="Receipt" className="lightbox-img" />
+          </div>
+        </div>
+      )}
+
       {toast && <div className="toast">{toast}</div>}
     </div>
   );

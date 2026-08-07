@@ -6,7 +6,6 @@ input::-webkit-inner-spin-button {
 }
 
 /* Hide Firefox number arrows */
-/* Hide Firefox number arrows */
 input[type=number] {
   -moz-appearance: textfield;
   appearance: none;
@@ -489,6 +488,12 @@ input[type=number] {
   transform: translateY(-1px);
 }
 
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .btn-cancel {
   background: #f5f0f0;
   color: #7a6060;
@@ -585,4 +590,182 @@ input[type=number] {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   z-index: 300;
   animation: slideUp .25s ease;
+}
+
+/* ── RECEIPT UPLOAD ── */
+.btn-upload-receipt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1.5px dashed #7b1a1a;
+  color: #7b1a1a;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 9px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: background .15s;
+}
+
+.btn-upload-receipt:hover:not(:disabled) {
+  background: #fdf8f8;
+}
+
+.btn-upload-receipt:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.receipt-hint {
+  font-size: 0.68rem;
+  color: #9a8080;
+  margin-top: 6px;
+  margin-bottom: 16px;
+}
+
+/* Receipt grid (form) */
+.receipt-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.receipt-item {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid #e8ddd8;
+  background: #f8f5f4;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+
+.receipt-item:hover {
+  border-color: #7b1a1a;
+}
+
+.receipt-item-new {
+  border-color: #7b1a1a;
+}
+
+.receipt-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.receipt-remove {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  background: rgba(153, 27, 27, 0.85);
+  color: white;
+  border: none;
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.receipt-new-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(123, 26, 26, 0.75);
+  color: white;
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-align: center;
+  padding: 2px 0;
+  letter-spacing: .08em;
+}
+
+/* Receipt row in list view */
+.receipt-list-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #fdf8f8;
+  border-top: 1px solid #f0e8e8;
+  flex-wrap: wrap;
+}
+
+.receipt-list-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #7a6060;
+  white-space: nowrap;
+}
+
+.receipt-thumb-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.receipt-thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 7px;
+  border: 1.5px solid #e8ddd8;
+  cursor: pointer;
+  transition: border-color .15s, transform .15s;
+}
+
+.receipt-thumb:hover {
+  border-color: #7b1a1a;
+  transform: scale(1.06);
+}
+
+/* LIGHTBOX */
+.lightbox-box {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-img {
+  max-width: 88vw;
+  max-height: 86vh;
+  border-radius: 12px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  object-fit: contain;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  background: white;
+  color: #7b1a1a;
+  border: none;
+  font-size: 1rem;
+  font-weight: 800;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 10;
 }
