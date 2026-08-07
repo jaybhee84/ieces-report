@@ -3,11 +3,10 @@ import Topbar from "../components/Topbar";
 import { supabase, MOOE_TABLE } from "../supabaseClient";
 import "./MooePage.css";
 
-// Dynamic CY Options Generator (Calendar Years: e.g., CY 2024, CY 2025, CY 2026)
+// Dynamic CY Options Generator (Calendar Years starting from CY 2026)
 const getDynamicCYOptions = () => {
-  const currentYear = new Date().getFullYear();
-  const startYear = currentYear - 2;
-  const endYear = currentYear + 2;
+  const startYear = 2026;
+  const endYear = startYear + 2; // Generates 2026, 2027, 2028
   const options = [];
 
   for (let y = startYear; y <= endYear; y++) {
@@ -380,9 +379,10 @@ export default function MooePage({ onBack, onLogout, user }) {
   const addRow = () => setRows((prev) => [...prev, newRow()]);
   const delRow = (id) => setRows((prev) => prev.filter((r) => r.id !== id));
 
+  // Sorts options ascending: CY 2026 -> CY 2027 -> CY 2028
   const cyFilterOptions = Array.from(
     new Set([...CY_OPTIONS, ...records.map((r) => r.cy).filter(Boolean)]),
-  ).sort((a, b) => b.localeCompare(a));
+  ).sort((a, b) => a.localeCompare(b));
 
   const filteredRecords = filterCY
     ? records.filter((r) => r.cy === filterCY)
