@@ -1,0 +1,48 @@
+name: Build and Create Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*" # Triggers on tags like v1.0.0, v1.2.3-beta, etc.
+
+jobs:
+  build-and-release:
+    name: Build & Publish Release
+    runs-on: windows-latest # Change to ubuntu-latest or macos-latest if targeted differently
+
+    permissions:
+      contents: write # Required to upload releases and assets
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Electron App Installer
+        run: npm run build
+        # Make sure your package.json scripts include a build step that generates the installer,
+        # e.g., "build": "vite build && electron-builder"
+
+      - name: Create GitHub Release and Upload Installer
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            dist/*.exe
+            dist/*.msi
+            dist/*.dmg
+            dist/*.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
