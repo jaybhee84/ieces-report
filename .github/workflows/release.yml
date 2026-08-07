@@ -27,7 +27,7 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Build Electron App Installer
-        run: npm run release
+        run: npx electron-builder --win --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -41,8 +41,7 @@ jobs:
           generate_release_notes: true
           files: |
             dist-electron/*.exe
-            dist-electron/*.msi
-            dist-electron/*.dmg
-            dist-electron/*.AppImage
+            dist-electron/*.yml
+            dist-electron/*.blockmap
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
