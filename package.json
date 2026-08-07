@@ -33,15 +33,19 @@
   "build": {
     "appId": "com.ieces.report",
     "productName": "IECES Report",
+    "icon": "public/prieces",
     "directories": {
       "output": "dist-electron"
     },
     "files": [
       "dist/**/*",
-      "electron/**/*"
+      "electron/**/*",
+      "public/prieces.ico",
+      "public/prieces.icns"
     ],
     "extraResources": [],
     "win": {
+      "icon": "public/prieces.ico",
       "target": [
         {
           "target": "nsis",
@@ -50,6 +54,9 @@
           ]
         }
       ]
+    },
+    "mac": {
+      "icon": "public/prieces.icns"
     },
     "nsis": {
       "oneClick": false,
