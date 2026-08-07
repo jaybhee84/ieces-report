@@ -1,0 +1,180 @@
+.dash-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+.dash-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.dash-welcome {
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1.5px solid #e8ddd8;
+}
+.dw-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #7b1a1a;
+}
+.dw-sub {
+  font-size: 0.78rem;
+  color: #7a6060;
+  margin-top: 3px;
+}
+
+/* MODULE CARDS */
+.module-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 32px;
+}
+.module-card {
+  background: white;
+  border-radius: 14px;
+  padding: 28px 24px;
+  border: 2px solid transparent;
+  box-shadow: 0 2px 16px rgba(123,26,26,0.08);
+  cursor: pointer;
+  transition: border .2s, transform .15s, box-shadow .2s;
+  text-align: center;
+}
+.module-card:hover {
+  border-color: #7b1a1a;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(123,26,26,0.14);
+}
+.mc-icon { font-size: 2.6rem; margin-bottom: 12px; }
+.mc-label {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #7b1a1a;
+  margin-bottom: 6px;
+}
+.mc-desc {
+  font-size: 0.76rem;
+  color: #7a6060;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.mc-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.badge-wip { background: #fde68a; color: #92400e; }
+.badge-active { background: #dcfce7; color: #166534; }
+
+/* SECTION */
+.dash-section { margin-bottom: 24px; }
+.ds-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.ds-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #7b1a1a;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.ds-link {
+  background: none;
+  border: none;
+  color: #7b1a1a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.ds-empty {
+  font-size: 0.8rem;
+  color: #7a6060;
+  text-align: center;
+  padding: 28px;
+  background: white;
+  border-radius: 10px;
+  border: 1.5px dashed #e8ddd8;
+}
+
+.recent-list { display: flex; flex-direction: column; gap: 10px; }
+.recent-card {
+  background: white;
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-left: 4px solid #7b1a1a;
+  box-shadow: 0 1px 8px rgba(123,26,26,0.07);
+}
+.rc-period { font-size: 0.88rem; font-weight: 700; color: #1a0a0a; }
+.rc-meta { font-size: 0.7rem; color: #7a6060; margin-top: 2px; }
+.rc-right { text-align: right; }
+.rc-total { font-size: 1rem; font-weight: 800; color: #7b1a1a; }
+.rc-bal { font-size: 0.72rem; color: #166534; }
+.rc-bal.neg { color: #991b1b; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 20px;
+}
+.modal-box {
+  background: white;
+  border-radius: 16px;
+  width: 100%; max-width: 420px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+  overflow: hidden;
+  animation: slideUp .22s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.modal-hdr {
+  background: linear-gradient(90deg, #7b1a1a, #5a1010);
+  color: white;
+  padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-weight: 800; font-size: 0.95rem;
+  border-bottom: 2px solid #f5c518;
+}
+.modal-hdr button {
+  background: rgba(255,255,255,0.15);
+  border: none; color: white;
+  width: 28px; height: 28px; border-radius: 50%;
+  font-size: 0.95rem; display: flex; align-items: center; justify-content: center;
+}
+.wip-body {
+  padding: 40px 28px;
+  text-align: center;
+}
+.wip-icon { font-size: 3rem; margin-bottom: 16px; }
+.wip-body h3 {
+  font-size: 1.1rem; font-weight: 800;
+  color: #7b1a1a; margin-bottom: 8px;
+}
+.wip-body p {
+  font-size: 0.8rem; color: #7a6060;
+  line-height: 1.6; max-width: 280px; margin: 0 auto 20px;
+}
+.wip-badge {
+  display: inline-block;
+  background: #fde68a; color: #92400e;
+  padding: 5px 16px; border-radius: 20px;
+  font-size: 0.72rem; font-weight: 700;
+}

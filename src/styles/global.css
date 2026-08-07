@@ -1,0 +1,108 @@
+:root {
+  --maroon: #7B1C1C;
+  --maroon-dark: #4C0D15;
+  --maroon-light: #881337;
+  --gold: #f5c518;
+  --gold-dark: #d4a800;
+  --gold-light: #fde68a;
+  --bg: #f7f3f0;
+  --card: #ffffff;
+  --text: #1a0a0a;
+  --muted: #7a6060;
+  --border: #e8ddd8;
+  --success: #166534;
+  --success-bg: #dcfce7;
+  --danger: #991b1b;
+  --danger-bg: #fee2e2;
+  --radius: 12px;
+  --shadow: 0 2px 16px rgba(123, 28, 28, 0.10);
+  --shadow-lg: 0 8px 40px rgba(123, 28, 28, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-app-region: no-drag;
+}
+
+/* Prevent image overflow issues across Electron components */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4b8b8;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--maroon-light);
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* Custom Utilities */
+.text-maroon {
+  color: var(--maroon);
+}
+
+.bg-maroon {
+  background-color: var(--maroon);
+}
+
+.border-maroon {
+  border-color: var(--maroon);
+}
+
+.text-gold {
+  color: var(--gold-dark);
+}
+
+.text-muted {
+  color: var(--muted);
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-black {
+  font-weight: 900;
+}
