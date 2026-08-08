@@ -1,0 +1,488 @@
+/* OrgChartPage.css */
+
+.oc-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.oc-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ─── Page Header ─── */
+.oc-page-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1.5px solid #e8ddd8;
+}
+
+.oc-page-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #7b1c1c;
+}
+
+.oc-page-sub {
+  font-size: 0.78rem;
+  color: #7a6060;
+  margin-top: 3px;
+}
+
+.oc-add-btn {
+  background: #7b1c1c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.oc-add-btn:hover {
+  background: #5a1010;
+  transform: translateY(-1px);
+}
+
+.oc-loading {
+  text-align: center;
+  color: #7a6060;
+  font-size: 0.85rem;
+  padding: 40px;
+}
+
+/* ─── Sections ─── */
+.oc-section {
+  margin-bottom: 32px;
+}
+
+.oc-section-hdr {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #7b1c1c;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+  padding: 6px 0;
+  border-bottom: 2px solid #f5e8e8;
+}
+
+.oc-empty {
+  font-size: 0.8rem;
+  color: #7a6060;
+  text-align: center;
+  padding: 28px;
+  background: white;
+  border-radius: 10px;
+  border: 1.5px dashed #e8ddd8;
+}
+
+/* ─── Grade Groups ─── */
+.oc-grade-group {
+  margin-bottom: 20px;
+}
+
+.oc-grade-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #5a1010;
+  background: #fff5f5;
+  border-left: 3px solid #7b1c1c;
+  padding: 6px 12px;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.oc-chairman-inline {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #92400e;
+  background: #fef3c7;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+/* ─── Staff Card ─── */
+.oc-staff-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: white;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  border-left: 4px solid #7b1c1c;
+  box-shadow: 0 1px 8px rgba(123, 26, 26, 0.07);
+  transition: box-shadow 0.15s;
+}
+
+.oc-staff-card:hover {
+  box-shadow: 0 4px 16px rgba(123, 26, 26, 0.13);
+}
+
+.oc-staff-card.oc-expired {
+  opacity: 0.6;
+  border-left-color: #9ca3af;
+  background: #f9fafb;
+}
+
+.oc-photo-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.oc-photo-wrap img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #f5c5c5;
+}
+
+.oc-no-photo {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #f5e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #c09090;
+}
+
+/* Stars for Principal / Asst Principal / Head Teacher */
+.oc-pos-admin {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.oc-stars {
+  font-size: 0.75rem;
+  color: #f59e0b;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+.oc-expired-badge {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #6b7280;
+  color: white;
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.oc-chairman-badge {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f59e0b;
+  color: white;
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.oc-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.oc-name {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #1a0a0a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oc-pos {
+  font-size: 0.75rem;
+  color: #7a6060;
+  margin-top: 2px;
+}
+
+.oc-sub-tag {
+  font-size: 0.68rem;
+  color: #92400e;
+  background: #fef3c7;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-top: 4px;
+}
+
+.oc-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.oc-btn-edit,
+.oc-btn-del {
+  background: none;
+  border: 1.5px solid #e8ddd8;
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.oc-btn-edit:hover {
+  background: #fff5f5;
+  border-color: #7b1c1c;
+}
+
+.oc-btn-del:hover {
+  background: #fee2e2;
+  border-color: #dc2626;
+}
+
+/* ─── Modal ─── */
+.oc-modal {
+  max-width: 520px !important;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.oc-form-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.oc-photo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.oc-photo-preview {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 3px solid #f5c5c5;
+  background: #f9f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s;
+}
+
+.oc-photo-preview:hover {
+  border-color: #7b1c1c;
+}
+
+.oc-photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.oc-photo-placeholder {
+  font-size: 0.7rem;
+  color: #c09090;
+  text-align: center;
+  line-height: 1.6;
+  padding: 8px;
+}
+
+.oc-change-photo {
+  background: none;
+  border: 1.5px solid #e8ddd8;
+  border-radius: 8px;
+  padding: 5px 14px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #7b1c1c;
+  cursor: pointer;
+}
+
+.oc-change-photo:hover {
+  background: #fff5f5;
+}
+
+/* Form fields */
+.oc-field {
+  margin-bottom: 16px;
+}
+
+.oc-field label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #5a1010;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.oc-field input[type="text"],
+.oc-field input[type="date"],
+.oc-field select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #e8ddd8;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  color: #1a0a0a;
+  background: white;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.oc-field input:focus,
+.oc-field select:focus {
+  border-color: #7b1c1c;
+}
+
+.oc-field-hint {
+  font-size: 0.68rem;
+  color: #7a6060;
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+/* Checkbox field */
+.oc-checkbox-field .oc-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1a0a0a;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.oc-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #7b1c1c;
+  cursor: pointer;
+}
+
+/* Radio buttons */
+.oc-radio-group {
+  display: flex;
+  gap: 10px;
+}
+
+.oc-radio {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1.5px solid #e8ddd8;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  color: #1a0a0a;
+}
+
+.oc-radio.active {
+  border-color: #7b1c1c;
+  background: #fff5f5;
+  color: #7b1c1c;
+}
+
+.oc-radio input[type="radio"] {
+  accent-color: #7b1c1c;
+}
+
+/* Substitute dates */
+.oc-sub-dates {
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+/* Form actions */
+.oc-form-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.oc-btn-cancel {
+  flex: 1;
+  padding: 11px;
+  border: 1.5px solid #e8ddd8;
+  border-radius: 10px;
+  background: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #7a6060;
+  cursor: pointer;
+}
+
+.oc-btn-cancel:hover {
+  background: #f9f5f5;
+}
+
+.oc-btn-save {
+  flex: 2;
+  padding: 11px;
+  border: none;
+  border-radius: 10px;
+  background: #7b1c1c;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.oc-btn-save:hover:not(:disabled) {
+  background: #5a1010;
+}
+
+.oc-btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -1,9 +1,14 @@
+/**
+ * App.jsx — updated
+ * Added org chart page route.
+ */
 import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabase";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import MooePage from "./pages/MooePage";
-import "./App.css"; // <-- Added import here
+import OrgChartPage from "./pages/OrgChartPage";
+import "./App.css";
 
 // ── Toast Notification ──
 function Toast({ toasts, removeToast }) {
@@ -13,14 +18,12 @@ function Toast({ toasts, removeToast }) {
         <div key={t.id} className={`toast toast-${t.type}`}>
           <span className="toast-icon">
             {t.type === "success" && "✓"}
-            {t.type === "error" && "✕"}
-            {t.type === "info" && "ℹ"}
+            {t.type === "error"   && "✕"}
+            {t.type === "info"    && "ℹ"}
             {t.type === "warning" && "⚠"}
           </span>
           <span className="toast-message">{t.message}</span>
-          <button className="toast-close" onClick={() => removeToast(t.id)}>
-            ✕
-          </button>
+          <button className="toast-close" onClick={() => removeToast(t.id)}>✕</button>
         </div>
       ))}
     </div>
@@ -30,7 +33,6 @@ function Toast({ toasts, removeToast }) {
 // ── Confirm Dialog ──
 function ConfirmDialog({ confirm, onConfirm, onCancel }) {
   if (!confirm) return null;
-
   return (
     <div className="confirm-overlay">
       <div className="confirm-box">
@@ -38,15 +40,8 @@ function ConfirmDialog({ confirm, onConfirm, onCancel }) {
         <p className="confirm-title">Confirm Action</p>
         <p className="confirm-message">{confirm.message}</p>
         <div className="confirm-actions">
-          <button className="confirm-btn confirm-btn-cancel" onClick={onCancel}>
-            Cancel
-          </button>
-          <button
-            className="confirm-btn confirm-btn-confirm"
-            onClick={onConfirm}
-          >
-            Confirm
-          </button>
+          <button className="confirm-btn confirm-btn-cancel" onClick={onCancel}>Cancel</button>
+          <button className="confirm-btn confirm-btn-confirm" onClick={onConfirm}>Confirm</button>
         </div>
       </div>
     </div>
@@ -55,14 +50,12 @@ function ConfirmDialog({ confirm, onConfirm, onCancel }) {
 
 export default function App() {
   const [session, setSession] = useState(null);
-  const [page, setPage] = useState("login");
+  const [page, setPage]       = useState("login");
   const [loading, setLoading] = useState(true);
-  const [toasts, setToasts] = useState([]);
+  const [toasts, setToasts]   = useState([]);
   const [confirm, setConfirm] = useState(null);
 
-  const removeToast = (id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  const removeToast = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
 
   const addToast = (message, type = "info", duration = 3000) => {
     const id = Date.now();
@@ -71,19 +64,10 @@ export default function App() {
   };
 
   const showConfirm = (message) =>
-    new Promise((resolve) => {
-      setConfirm({ message, resolve });
-    });
+    new Promise((resolve) => { setConfirm({ message, resolve }); });
 
-  const handleConfirm = () => {
-    confirm?.resolve(true);
-    setConfirm(null);
-  };
-
-  const handleCancel = () => {
-    confirm?.resolve(false);
-    setConfirm(null);
-  };
+  const handleConfirm = () => { confirm?.resolve(true);  setConfirm(null); };
+  const handleCancel  = () => { confirm?.resolve(false); setConfirm(null); };
 
   useEffect(() => {
     supabase.auth.signOut().then(() => {
@@ -92,9 +76,7 @@ export default function App() {
       setLoading(false);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
         setPage((prev) => (prev === "login" ? "dashboard" : prev));
@@ -131,27 +113,15 @@ export default function App() {
     );
   }
 
+  const sharedProps = { addToast, showConfirm };
+
   return (
     <>
       <Toast toasts={toasts} removeToast={removeToast} />
-      <ConfirmDialog
-        confirm={confirm}
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      />
+      <ConfirmDialog confirm={confirm} onConfirm={handleConfirm} onCancel={handleCancel} />
 
       {(page === "login" || !session) && (
         <LoginPage onLoginSuccess={handleLoginSuccess} addToast={addToast} />
-      )}
-
-      {page === "mooe" && session && (
-        <MooePage
-          onBack={() => setPage("dashboard")}
-          onLogout={handleLogout}
-          user={session?.user}
-          addToast={addToast}
-          showConfirm={showConfirm}
-        />
       )}
 
       {page === "dashboard" && session && (
@@ -160,8 +130,25 @@ export default function App() {
           session={session}
           onLogout={handleLogout}
           onNavigate={setPage}
-          addToast={addToast}
-          showConfirm={showConfirm}
+          {...sharedProps}
+        />
+      )}
+
+      {page === "mooe" && session && (
+        <MooePage
+          onBack={() => setPage("dashboard")}
+          onLogout={handleLogout}
+          user={session?.user}
+          {...sharedProps}
+        />
+      )}
+
+      {page === "orgchart" && session && (
+        <OrgChartPage
+          onBack={() => setPage("dashboard")}
+          onLogout={handleLogout}
+          user={session?.user}
+          {...sharedProps}
         />
       )}
     </>

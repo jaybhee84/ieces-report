@@ -1,3 +1,5 @@
+/* Dashboard.css — updated */
+
 .dash-root {
   display: flex;
   flex-direction: column;
@@ -36,6 +38,12 @@
   gap: 18px;
   margin-bottom: 32px;
 }
+.module-grid-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+@media (max-width: 700px) {
+  .module-grid-3 { grid-template-columns: 1fr 1fr; }
+}
 .module-card {
   background: white;
   border-radius: 14px;
@@ -71,7 +79,7 @@
   font-size: 0.7rem;
   font-weight: 700;
 }
-.badge-wip { background: #fde68a; color: #92400e; }
+.badge-wip    { background: #fde68a; color: #92400e; }
 .badge-active { background: #dcfce7; color: #166534; }
 
 /* SECTION */
@@ -108,23 +116,29 @@
   border: 1.5px dashed #e8ddd8;
 }
 
-.recent-list { display: flex; flex-direction: column; gap: 10px; }
-.recent-card {
+/* TIPS */
+.tips-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.tip-card {
   background: white;
   border-radius: 10px;
-  padding: 14px 18px;
+  padding: 16px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-left: 4px solid #7b1a1a;
-  box-shadow: 0 1px 8px rgba(123,26,26,0.07);
+  align-items: flex-start;
+  gap: 12px;
+  border-left: 3px solid #7b1a1a;
+  box-shadow: 0 1px 6px rgba(123,26,26,0.07);
 }
-.rc-period { font-size: 0.88rem; font-weight: 700; color: #1a0a0a; }
-.rc-meta { font-size: 0.7rem; color: #7a6060; margin-top: 2px; }
-.rc-right { text-align: right; }
-.rc-total { font-size: 1rem; font-weight: 800; color: #7b1a1a; }
-.rc-bal { font-size: 0.72rem; color: #166534; }
-.rc-bal.neg { color: #991b1b; }
+.tip-icon { font-size: 1.4rem; flex-shrink: 0; }
+.tip-text {
+  font-size: 0.76rem;
+  color: #7a6060;
+  line-height: 1.6;
+}
+.tip-text strong { color: #1a0a0a; }
 
 /* MODAL */
 .modal-overlay {
@@ -143,7 +157,7 @@
 }
 @keyframes slideUp {
   from { transform: translateY(24px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 .modal-hdr {
   background: linear-gradient(90deg, #7b1a1a, #5a1010);
@@ -158,11 +172,9 @@
   border: none; color: white;
   width: 28px; height: 28px; border-radius: 50%;
   font-size: 0.95rem; display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
 }
-.wip-body {
-  padding: 40px 28px;
-  text-align: center;
-}
+.wip-body { padding: 40px 28px; text-align: center; }
 .wip-icon { font-size: 3rem; margin-bottom: 16px; }
 .wip-body h3 {
   font-size: 1.1rem; font-weight: 800;

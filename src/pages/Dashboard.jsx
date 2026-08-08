@@ -1,4 +1,8 @@
-import { useEffect, useState } from "react";
+/**
+ * Dashboard.jsx — updated
+ * Replaced "Recent MOOE" section with Org Chart module card.
+ */
+import { useState } from "react";
 import Topbar from "../components/Topbar";
 import "./Dashboard.css";
 
@@ -19,20 +23,18 @@ const MODULES = [
     badge: "active",
     badgeText: "✅ Active",
   },
+  {
+    id: "orgchart",
+    icon: "🏫",
+    label: "Org Chart",
+    desc: "Manage the school's organizational chart — add staff photos, positions, grade assignments, and substitutes.",
+    badge: "active",
+    badgeText: "✅ Active",
+  },
 ];
 
-export default function Dashboard({ user, onLogout, onNavigate }) {
-  const [recentMooe, setRecentMooe] = useState([]);
+export default function Dashboard({ user, onLogout, onNavigate, addToast, showConfirm }) {
   const [enrollModal, setEnrollModal] = useState(false);
-
-  useEffect(() => {
-    window.ipc.mooe.getAll().then((all) => {
-      const sorted = [...all].sort(
-        (a, b) => new Date(b.savedAt) - new Date(a.savedAt),
-      );
-      setRecentMooe(sorted.slice(0, 5));
-    });
-  }, []);
 
   const handleCard = (id) => {
     if (id === "enrollment") {
@@ -48,14 +50,12 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
       <div className="dash-body">
         <div className="dash-welcome">
           <div>
-            <div className="dw-title">
-              Welcome back, {user?.name || "Admin"} 👋
-            </div>
+            <div className="dw-title">Welcome back, {user?.name || "Admin"} 👋</div>
             <div className="dw-sub">Isabela East Central Elementary School</div>
           </div>
         </div>
 
-        <div className="module-grid">
+        <div className="module-grid module-grid-3">
           {MODULES.map((m) => (
             <div
               key={m.id}
@@ -70,49 +70,25 @@ export default function Dashboard({ user, onLogout, onNavigate }) {
           ))}
         </div>
 
+        {/* Quick tips */}
         <div className="dash-section">
           <div className="ds-header">
-            <span className="ds-title">Recent MOOE Entries</span>
-            {recentMooe.length > 0 && (
-              <button className="ds-link" onClick={() => onNavigate("mooe")}>
-                View All →
-              </button>
-            )}
+            <span className="ds-title">Quick Tips</span>
           </div>
-          {recentMooe.length === 0 ? (
-            <div className="ds-empty">
-              No MOOE entries yet. Click the MOOE Report card to start encoding.
+          <div className="tips-grid">
+            <div className="tip-card">
+              <div className="tip-icon">🏫</div>
+              <div className="tip-text">
+                <strong>Org Chart:</strong> Add staff photos, assign grade levels, mark Grade Chairmen, and set substitute expiry dates. Expired substitutes auto-hide on the public website.
+              </div>
             </div>
-          ) : (
-            <div className="recent-list">
-              {recentMooe.map((r, i) => (
-                <div key={i} className="recent-card">
-                  <div className="rc-left">
-                    <div className="rc-period">
-                      {r.month} — {r.sy}
-                    </div>
-                    <div className="rc-meta">
-                      {r.items?.length || 0} items · By {r.liquidatedBy || "—"}
-                    </div>
-                  </div>
-                  <div className="rc-right">
-                    <div className="rc-total">
-                      ₱
-                      {Number(r.total || 0).toLocaleString("en-PH", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </div>
-                    <div className={`rc-bal ${r.balance < 0 ? "neg" : ""}`}>
-                      Balance: ₱
-                      {Number(r.balance || 0).toLocaleString("en-PH", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="tip-card">
+              <div className="tip-icon">📊</div>
+              <div className="tip-text">
+                <strong>MOOE Report:</strong> Encode monthly liquidation entries. Upload official receipts for transparency and audit compliance.
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
