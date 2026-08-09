@@ -1,10 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import iecesLogo from "../image/ieceslogo.png";
 import "./LoginPage.css";
 
 export default function LoginPage({ onLoginSuccess }) {
   const [view, setView] = useState("login"); // 'login' | 'register'
+  const [appVersion, setAppVersion] = useState("");
+
+  useEffect(() => {
+    // Read app version via Electron preload bridge
+    if (window?.ipc?.getVersion) {
+      window.ipc.getVersion().then(setAppVersion).catch(() => {});
+    }
+  }, []);
 
   return (
     <div className="login-root">
@@ -32,6 +40,13 @@ export default function LoginPage({ onLoginSuccess }) {
             MOOE Reports for Transparency
           </p>
         </div>
+
+        {/* Version badge — bottom of left panel */}
+        {appVersion && (
+          <div className="login-version">
+            v{appVersion}
+          </div>
+        )}
       </div>
 
       {/* Right panel */}

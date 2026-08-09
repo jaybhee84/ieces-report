@@ -14,7 +14,10 @@ const BUCKET = "org-photos";
 const TABLE = "org_chart";
 
 const ADMIN_POSITIONS = [
-  "Principal",
+  "Principal I",
+  "Principal II",
+  "Principal III",
+  "Principal IV",
   "Assistant Principal",
   "Head Teacher I",
   "Head Teacher II",
@@ -22,6 +25,7 @@ const ADMIN_POSITIONS = [
   "Head Teacher IV",
   "Head Teacher V",
   "Head Teacher VI",
+  "Nurse II",
   "Administrative Officer II (AO II)",
   "Planning & Development Officer I (PDO I)",
   "Administrative Assistant III (Senior Bookkeeper)",
@@ -31,7 +35,9 @@ const ADMIN_POSITIONS = [
 
 // Positions that can be "designated" (acting, not permanent)
 const DESIGNATABLE = [
-  "Assistant Principal",
+  "Assistant Principal I",
+  "Assistant Principal II",
+  "Principal I",
   "Head Teacher I",
   "Head Teacher II",
   "Head Teacher III",
@@ -69,6 +75,12 @@ const TEACHING_POSITIONS = [
 
 const TEACHING_TYPES = ["Adviser", "Subject Teacher"];
 
+const JO_POSITIONS = [
+  "Security Guard / Watchman",
+  "Utility Worker",
+  "Administrative Aide",
+];
+
 // ─── helpers ──────────────────────────────────────────────────────────────────
 function isSubExpired(person) {
   if (person.status !== "substitute" || !person.sub_expiry_end) return false;
@@ -98,7 +110,7 @@ function getAdminStars(position) {
 // ─── empty form ───────────────────────────────────────────────────────────────
 const EMPTY = {
   name: "",
-  category: "teaching", // admin | teaching | non-teaching
+  category: "teaching", // admin | teaching | job-order
   admin_position: "",
   is_designated: false,
   teaching_position: "Teacher I",
@@ -144,7 +156,7 @@ function StaffCard({ person, onEdit, onDelete }) {
           ) : person.category === "teaching" ? (
             `${person.teaching_position || ""} · ${person.grade_level} — ${person.teaching_type}`
           ) : (
-            person.admin_position || "Non-Teaching"
+            person.admin_position || "Job Order"
           )}
         </div>
         {person.status === "substitute" && (
@@ -249,7 +261,15 @@ export default function OrgChartPage({
       addToast("Select an admin position.", "warning");
       return;
     }
-    if (form.status === "substitute" && !form.sub_expiry_end) {
+    if (form.category === "job-order" && !form.admin_position) {
+      addToast("Select a job order position.", "warning");
+      return;
+    }
+    if (
+      form.status === "substitute" &&
+      form.category !== "job-order" &&
+      !form.sub_expiry_end
+    ) {
       addToast("Set a substitute expiry date.", "warning");
       return;
     }
@@ -291,11 +311,15 @@ export default function OrgChartPage({
         form.category === "teaching" && form.grade_level !== "SPED"
           ? form.is_grade_chairman
           : false,
-      status: form.status,
+      status: form.category === "job-order" ? "alive" : form.status,
       sub_expiry_start:
-        form.status === "substitute" ? form.sub_expiry_start || null : null,
+        form.status === "substitute" && form.category !== "job-order"
+          ? form.sub_expiry_start || null
+          : null,
       sub_expiry_end:
-        form.status === "substitute" ? form.sub_expiry_end || null : null,
+        form.status === "substitute" && form.category !== "job-order"
+          ? form.sub_expiry_end || null
+          : null,
       photo_url,
     };
 
@@ -333,7 +357,9 @@ export default function OrgChartPage({
   // ── grouped views ──────────────────────────────────────────────────────────
   const adminStaff = staff.filter((s) => s.category === "admin");
   const teachingStaff = staff.filter((s) => s.category === "teaching");
-  const nonTeaching = staff.filter((s) => s.category === "non-teaching");
+  const jobOrder = staff.filter(
+    (s) => s.category === "job-order" || s.category === "non-teaching",
+  ); // support legacy
 
   const f = form; // shorthand
   const set = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
@@ -419,13 +445,13 @@ export default function OrgChartPage({
               )}
             </div>
 
-            {/* NON-TEACHING */}
+            {/* JOB ORDER */}
             <div className="oc-section">
-              <div className="oc-section-hdr">🗂️ Non-Teaching Staff</div>
-              {nonTeaching.length === 0 ? (
-                <div className="oc-empty">No non-teaching staff added yet.</div>
+              <div className="oc-section-hdr">🔧 Job Order Staff</div>
+              {jobOrder.length === 0 ? (
+                <div className="oc-empty">No job order staff added yet.</div>
               ) : (
-                nonTeaching.map((p) => (
+                jobOrder.map((p) => (
                   <StaffCard
                     key={p.id}
                     person={p}
@@ -485,7 +511,6 @@ export default function OrgChartPage({
                   {photoPreview ? "Change Photo" : "Upload Photo"}
                 </button>
               </div>
-
               {/* Name */}
               <div className="oc-field">
                 <label>Full Name *</label>
@@ -496,7 +521,6 @@ export default function OrgChartPage({
                   onChange={(e) => set("name", e.target.value.toUpperCase())}
                 />
               </div>
-
               {/* Category */}
               <div className="oc-field">
                 <label>Category *</label>
@@ -506,12 +530,11 @@ export default function OrgChartPage({
                 >
                   <option value="admin">Administration</option>
                   <option value="teaching">Teaching</option>
-                  <option value="non-teaching">Non-Teaching</option>
+                  <option value="job-order">Job Order</option>
                 </select>
               </div>
-
               {/* Admin Position */}
-              {(f.category === "admin" || f.category === "non-teaching") && (
+              {(f.category === "admin" || f.category === "job-order") && (
                 <div className="oc-field">
                   <label>Position *</label>
                   {f.category === "admin" ? (
@@ -527,16 +550,20 @@ export default function OrgChartPage({
                       ))}
                     </select>
                   ) : (
-                    <input
-                      type="text"
-                      placeholder="e.g. Security Guard, Utility Worker"
+                    <select
                       value={f.admin_position}
                       onChange={(e) => set("admin_position", e.target.value)}
-                    />
+                    >
+                      <option value="">— Select position —</option>
+                      {JO_POSITIONS.map((p) => (
+                        <option key={p} value={p}>
+                          {p}
+                        </option>
+                      ))}
+                    </select>
                   )}
                 </div>
               )}
-
               {/* Designated toggle — only for designatable admin positions */}
               {f.category === "admin" &&
                 DESIGNATABLE.includes(f.admin_position) && (
@@ -556,7 +583,6 @@ export default function OrgChartPage({
                     </div>
                   </div>
                 )}
-
               {/* Teaching fields */}
               {f.category === "teaching" && (
                 <>
@@ -623,40 +649,41 @@ export default function OrgChartPage({
                   )}
                 </>
               )}
-
-              {/* Status */}
-              <div className="oc-field">
-                <label>Status</label>
-                <div className="oc-radio-group">
-                  <label
-                    className={`oc-radio ${f.status === "alive" ? "active" : ""}`}
-                  >
-                    <input
-                      type="radio"
-                      name="status"
-                      value="alive"
-                      checked={f.status === "alive"}
-                      onChange={() => set("status", "alive")}
-                    />
-                    Regular / Active
-                  </label>
-                  <label
-                    className={`oc-radio ${f.status === "substitute" ? "active" : ""}`}
-                  >
-                    <input
-                      type="radio"
-                      name="status"
-                      value="substitute"
-                      checked={f.status === "substitute"}
-                      onChange={() => set("status", "substitute")}
-                    />
-                    Substitute
-                  </label>
+              {/* Status — hidden for job order (they have no regular/sub distinction) */}
+              {f.category !== "job-order" && (
+                <div className="oc-field">
+                  <label>Status</label>
+                  <div className="oc-radio-group">
+                    <label
+                      className={`oc-radio ${f.status === "alive" ? "active" : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name="status"
+                        value="alive"
+                        checked={f.status === "alive"}
+                        onChange={() => set("status", "alive")}
+                      />
+                      Regular / Active
+                    </label>
+                    <label
+                      className={`oc-radio ${f.status === "substitute" ? "active" : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name="status"
+                        value="substitute"
+                        checked={f.status === "substitute"}
+                        onChange={() => set("status", "substitute")}
+                      />
+                      Substitute
+                    </label>
+                  </div>
                 </div>
-              </div>
-
+              )}{" "}
+              {/* end status conditional */}
               {/* Substitute dates */}
-              {f.status === "substitute" && (
+              {f.status === "substitute" && f.category !== "job-order" && (
                 <div className="oc-sub-dates">
                   <div className="oc-field">
                     <label>Substitute From</label>
@@ -681,7 +708,6 @@ export default function OrgChartPage({
                   </div>
                 </div>
               )}
-
               {/* Actions */}
               <div className="oc-form-actions">
                 <button

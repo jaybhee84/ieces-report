@@ -275,6 +275,22 @@
   text-decoration: underline;
 }
 
+/* Version badge */
+.login-version {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: .08em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* Mobile Responsive */
 @media (max-width: 900px) {
   .login-left {
