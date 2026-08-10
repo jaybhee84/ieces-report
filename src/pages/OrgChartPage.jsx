@@ -111,6 +111,52 @@ function formatDate(iso) {
   });
 }
 
+// Helper to parse existing / legacy names cleanly
+function parsePersonName(person) {
+  let family = (person.family_name || "").trim();
+  let first = (person.first_name || "").trim();
+  let middle = (person.middle_name || "").trim();
+
+  // Fallback parser if columns were empty or structured differently
+  if (!first || !family) {
+    const rawName = person.name || "";
+
+    if (rawName.includes(",")) {
+      // Legacy format: "FAMILY, FIRST MIDDLE"
+      const parts = rawName.split(",");
+      family = parts[0].trim();
+      const rest = (parts[1] || "").trim().split(/\s+/);
+      first = rest[0] || "";
+      middle = rest.slice(1).join(" ") || "";
+    } else {
+      // Format: "FIRST MIDDLE FAMILY"
+      const parts = rawName.trim().split(/\s+/);
+      if (parts.length === 1) {
+        first = parts[0];
+      } else if (parts.length === 2) {
+        first = parts[0];
+        family = parts[1];
+      } else if (parts.length > 2) {
+        first = parts[0];
+        middle = parts.slice(1, -1).join(" ");
+        family = parts[parts.length - 1];
+      }
+    }
+  }
+
+  return {
+    family: family.toUpperCase(),
+    first: first.toUpperCase(),
+    middle: middle.toUpperCase(),
+  };
+}
+
+// Format full name as FIRST MIDDLE FAMILY
+function getDisplayName(person) {
+  const { first, middle, family } = parsePersonName(person);
+  return `${first}${middle ? " " + middle : ""} ${family}`.trim();
+}
+
 // Returns ★ badges based on admin position rank
 function getAdminStars(position) {
   if (!position) return null;
@@ -136,7 +182,9 @@ function getAdminRank(position) {
 
 // ─── empty form ───────────────────────────────────────────────────────────────
 const EMPTY = {
-  name: "",
+  family_name: "",
+  first_name: "",
+  middle_name: "",
   category: "teaching", // admin | teaching | job-order
   admin_position: "",
   is_designated: false,
@@ -153,11 +201,13 @@ const EMPTY = {
 // ─── StaffCard mini ──────────────────────────────────────────────────────────
 function StaffCard({ person, onEdit, onDelete }) {
   const expired = isSubExpired(person);
+  const displayName = getDisplayName(person);
+
   return (
     <div className={`oc-staff-card ${expired ? "oc-expired" : ""}`}>
       <div className="oc-photo-wrap">
         {person.photo_url ? (
-          <img src={person.photo_url} alt={person.name} />
+          <img src={person.photo_url} alt={displayName} />
         ) : (
           <div className="oc-no-photo">👤</div>
         )}
@@ -167,7 +217,7 @@ function StaffCard({ person, onEdit, onDelete }) {
         )}
       </div>
       <div className="oc-info">
-        <div className="oc-name">{person.name}</div>
+        <div className="oc-name">{displayName}</div>
         <div className="oc-pos">
           {person.category === "admin" ? (
             <span className="oc-pos-admin">
@@ -250,8 +300,12 @@ export default function OrgChartPage({
   };
 
   const openEdit = (person) => {
+    const parsed = parsePersonName(person);
+
     setForm({
-      name: person.name || "",
+      family_name: parsed.family,
+      first_name: parsed.first,
+      middle_name: parsed.middle,
       category: person.category || "teaching",
       admin_position: person.admin_position || "",
       is_designated: person.is_designated || false,
@@ -280,8 +334,12 @@ export default function OrgChartPage({
 
   // ── save ───────────────────────────────────────────────────────────────────
   const handleSave = async () => {
-    if (!form.name.trim()) {
-      addToast("Name is required.", "warning");
+    if (!form.family_name.trim()) {
+      addToast("Family Name (Last Name) is required.", "warning");
+      return;
+    }
+    if (!form.first_name.trim()) {
+      addToast("First Name is required.", "warning");
       return;
     }
     if (form.category === "admin" && !form.admin_position) {
@@ -300,14 +358,22 @@ export default function OrgChartPage({
       addToast("Set a substitute expiry date.", "warning");
       return;
     }
+
     setSaving(true);
+
+    const family = form.family_name.trim().toUpperCase();
+    const first = form.first_name.trim().toUpperCase();
+    const middle = form.middle_name.trim().toUpperCase();
+
+    // Consolidated format: "FIRST NAME MIDDLE NAME FAMILY NAME"
+    const formattedFullName = `${first}${middle ? " " + middle : ""} ${family}`;
 
     let photo_url = form.photo_url;
 
     // upload photo if new file chosen
     if (photoFile) {
       const ext = photoFile.name.split(".").pop();
-      const path = `staff/${Date.now()}_${form.name.replace(/\s+/g, "_")}.${ext}`;
+      const path = `staff/${Date.now()}_${family.replace(/\s+/g, "_")}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from(BUCKET)
         .upload(path, photoFile, { upsert: true });
@@ -323,7 +389,10 @@ export default function OrgChartPage({
     }
 
     const payload = {
-      name: form.name.trim(),
+      name: formattedFullName,
+      family_name: family,
+      first_name: first,
+      middle_name: middle || null,
       category: form.category,
       admin_position: form.category !== "teaching" ? form.admin_position : null,
       is_designated:
@@ -369,14 +438,15 @@ export default function OrgChartPage({
 
   // ── delete ─────────────────────────────────────────────────────────────────
   const handleDelete = async (person) => {
+    const displayName = getDisplayName(person);
     const ok = await showConfirm(
-      `Remove "${person.name}" from the org chart?\n\nTheir photo and data will be kept in storage but removed from the chart.`,
+      `Remove "${displayName}" from the org chart?\n\nTheir photo and data will be kept in storage but removed from the chart.`,
     );
     if (!ok) return;
     const { error } = await supabase.from(TABLE).delete().eq("id", person.id);
     if (error) addToast("Delete failed: " + error.message, "error");
     else {
-      addToast(`${person.name} removed.`, "info");
+      addToast(`${displayName} removed.`, "info");
       fetchStaff();
     }
   };
@@ -391,9 +461,9 @@ export default function OrgChartPage({
   const teachingStaff = staff.filter((s) => s.category === "teaching");
   const jobOrder = staff.filter(
     (s) => s.category === "job-order" || s.category === "non-teaching",
-  ); // support legacy
+  );
 
-  const f = form; // shorthand
+  const f = form;
   const set = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
 
   // ─── render ────────────────────────────────────────────────────────────────
@@ -451,7 +521,6 @@ export default function OrgChartPage({
                 );
                 if (gradeTeachers.length === 0) return null;
 
-                // Sort so Grade Chairman (is_grade_chairman = true) is always first
                 const sortedGradeTeachers = [...gradeTeachers].sort((a, b) => {
                   if (a.is_grade_chairman === b.is_grade_chairman) return 0;
                   return a.is_grade_chairman ? -1 : 1;
@@ -467,7 +536,7 @@ export default function OrgChartPage({
                       {gl}
                       {chairman && (
                         <span className="oc-chairman-inline">
-                          ⭐ {chairman.name} (Grade Chairman)
+                          ⭐ {getDisplayName(chairman)} (Grade Chairman)
                         </span>
                       )}
                     </div>
@@ -553,16 +622,44 @@ export default function OrgChartPage({
                   {photoPreview ? "Change Photo" : "Upload Photo"}
                 </button>
               </div>
-              {/* Name */}
+
+              {/* Name Fields */}
               <div className="oc-field">
-                <label>Full Name *</label>
+                <label>First Name *</label>
                 <input
                   type="text"
-                  placeholder="e.g. MARIA SANTOS"
-                  value={f.name}
-                  onChange={(e) => set("name", e.target.value.toUpperCase())}
+                  placeholder="e.g. JOCELYN"
+                  value={f.first_name}
+                  onChange={(e) =>
+                    set("first_name", e.target.value.toUpperCase())
+                  }
                 />
               </div>
+
+              <div className="oc-field">
+                <label>Middle Name / Initial</label>
+                <input
+                  type="text"
+                  placeholder="e.g. R."
+                  value={f.middle_name}
+                  onChange={(e) =>
+                    set("middle_name", e.target.value.toUpperCase())
+                  }
+                />
+              </div>
+
+              <div className="oc-field">
+                <label>Family Name (Last Name) *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. BUENAVENTURA"
+                  value={f.family_name}
+                  onChange={(e) =>
+                    set("family_name", e.target.value.toUpperCase())
+                  }
+                />
+              </div>
+
               {/* Category */}
               <div className="oc-field">
                 <label>Category *</label>
@@ -575,6 +672,7 @@ export default function OrgChartPage({
                   <option value="job-order">Job Order</option>
                 </select>
               </div>
+
               {/* Admin Position */}
               {(f.category === "admin" || f.category === "job-order") && (
                 <div className="oc-field">
@@ -606,7 +704,8 @@ export default function OrgChartPage({
                   )}
                 </div>
               )}
-              {/* Designated toggle — only for designatable admin positions */}
+
+              {/* Designated toggle */}
               {f.category === "admin" &&
                 DESIGNATABLE.includes(f.admin_position) && (
                   <div className="oc-field oc-checkbox-field">
@@ -625,6 +724,7 @@ export default function OrgChartPage({
                     </div>
                   </div>
                 )}
+
               {/* Teaching fields */}
               {f.category === "teaching" && (
                 <>
@@ -670,7 +770,6 @@ export default function OrgChartPage({
                     </select>
                   </div>
 
-                  {/* Grade Chairman — only for non-SPED */}
                   {f.grade_level !== "SPED" && (
                     <div className="oc-field oc-checkbox-field">
                       <label className="oc-checkbox-label">
@@ -691,7 +790,8 @@ export default function OrgChartPage({
                   )}
                 </>
               )}
-              {/* Status — hidden for job order */}
+
+              {/* Status */}
               {f.category !== "job-order" && (
                 <div className="oc-field">
                   <label>Status</label>
@@ -723,6 +823,7 @@ export default function OrgChartPage({
                   </div>
                 </div>
               )}
+
               {/* Substitute dates */}
               {f.status === "substitute" && f.category !== "job-order" && (
                 <div className="oc-sub-dates">
@@ -749,6 +850,7 @@ export default function OrgChartPage({
                   </div>
                 </div>
               )}
+
               {/* Actions */}
               <div className="oc-form-actions">
                 <button
