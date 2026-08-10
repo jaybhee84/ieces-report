@@ -365,9 +365,6 @@ export default function OrgChartPage({
     const first = form.first_name.trim().toUpperCase();
     const middle = form.middle_name.trim().toUpperCase();
 
-    // Consolidated format: "FIRST NAME MIDDLE NAME FAMILY NAME"
-    const formattedFullName = `${first}${middle ? " " + middle : ""} ${family}`;
-
     let photo_url = form.photo_url;
 
     // upload photo if new file chosen
@@ -389,7 +386,6 @@ export default function OrgChartPage({
     }
 
     const payload = {
-      name: formattedFullName,
       family_name: family,
       first_name: first,
       middle_name: middle || null,
