@@ -32,8 +32,9 @@ jobs:
         run: |
           $pkg = Get-Content package.json | ConvertFrom-Json
           $ver = "v" + $pkg.version
-          "VERSION=$ver" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "version=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          # Using utf8NoBOM encoding to prevent GitHub Actions env parsing failures
+          [System.IO.File]::AppendAllText($env:GITHUB_ENV, "VERSION=$ver`n")
+          [System.IO.File]::AppendAllText($env:GITHUB_OUTPUT, "version=$ver`n")
 
       - name: Check if Tag Already Exists
         id: check_tag
@@ -43,20 +44,11 @@ jobs:
           $targetTag = "$env:VERSION"
           $exists = git tag -l $targetTag
           if ($exists) {
-            "exists=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            [System.IO.File]::AppendAllText($env:GITHUB_OUTPUT, "exists=true`n")
             Write-Host "Tag $targetTag already exists. Skipping release build."
           } else {
-            "exists=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            [System.IO.File]::AppendAllText($env:GITHUB_OUTPUT, "exists=false`n")
           }
-
-      - name: Create and Push Git Tag
-        if: steps.check_tag.outputs.exists == 'false'
-        shell: powershell
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag $env:VERSION
-          git push origin $env:VERSION
 
       - name: Install dependencies
         if: steps.check_tag.outputs.exists == 'false'
@@ -71,3 +63,12 @@ jobs:
         run: npx electron-builder --win --publish always -c.publish.releaseType=release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Git Tag
+        if: steps.check_tag.outputs.exists == 'false'
+        shell: powershell
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag $env:VERSION
+          git push origin $env:VERSION
