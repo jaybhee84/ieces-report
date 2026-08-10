@@ -5,7 +5,7 @@
   "author": "BuzzJay",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME.git"
+    "url": "https://github.com/jaybhee84/ieces-report.git"
   },
   "main": "electron/main.cjs",
   "scripts": {
@@ -41,8 +41,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "YOUR_GITHUB_USERNAME",
-        "repo": "YOUR_REPO_NAME"
+        "owner": "jaybhee84",
+        "repo": "ieces-report"
       }
     ],
     "icon": "public/prieces",
