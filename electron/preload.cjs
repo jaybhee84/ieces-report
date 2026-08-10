@@ -11,7 +11,9 @@ contextBridge.exposeInMainWorld('ipc', {
   updater: {
     checkForUpdates: () => ipcRenderer.invoke('update:check'),
     quitAndInstall: () => ipcRenderer.invoke('update:quitAndInstall'),
+    onChecking: (callback) => ipcRenderer.on('update:checking', () => callback()),
     onUpdateAvailable: (callback) => ipcRenderer.on('update:available', (_, info) => callback(info)),
+    onUpdateNotAvailable: (callback) => ipcRenderer.on('update:not-available', (_, info) => callback(info)),
     onUpdateDownloaded: (callback) => ipcRenderer.on('update:downloaded', (_, info) => callback(info)),
     onError: (callback) => ipcRenderer.on('update:error', (_, error) => callback(error)),
   }

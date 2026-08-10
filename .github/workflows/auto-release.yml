@@ -1,0 +1,66 @@
+name: Auto Tag and Release
+
+on:
+  push:
+    branches:
+      - main # Change to master if your primary branch is master
+
+jobs:
+  auto-tag-and-release:
+    name: Build & Auto Publish Release
+    runs-on: windows-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Get Version from package.json
+        id: package_version
+        run: |
+          $ver = (Get-Content package.json | ConvertFrom-Json).version
+          echo "VERSION=v$ver" >> $env:GITHUB_ENV
+
+      - name: Check if Tag Already Exists
+        id: check_tag
+        run: |
+          git fetch --tags
+          $exists = git tag -l "${{ env.VERSION }}"
+          if ($exists) {
+            echo "TAG_EXISTS=true" >> $env:GITHUB_ENV
+            echo "Tag ${{ env.VERSION }} already exists. Skipping release build."
+          } else {
+            echo "TAG_EXISTS=false" >> $env:GITHUB_ENV
+          }
+
+      - name: Create and Push Git Tag
+        if: env.TAG_EXISTS == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ env.VERSION }}
+          git push origin ${{ env.VERSION }}
+
+      - name: Install dependencies
+        if: env.TAG_EXISTS == 'false'
+        run: npm ci
+
+      - name: Build Vite Frontend
+        if: env.TAG_EXISTS == 'false'
+        run: npm run build
+
+      - name: Build and Publish Electron App
+        if: env.TAG_EXISTS == 'false'
+        run: npx electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -33,6 +33,19 @@ const ADMIN_POSITIONS = [
   "Administrative Aide (Job Order)",
 ];
 
+// Custom hierarchy rank order for Admin positions
+const ADMIN_RANK_ORDER = [
+  "Principal",
+  "Assistant Principal",
+  "Head Teacher",
+  "Nurse",
+  "Administrative Officer",
+  "Planning & Development Officer",
+  "Administrative Assistant III",
+  "Administrative Assistant II",
+  "Administrative Aide",
+];
+
 // Positions that can be "designated" (acting, not permanent)
 const DESIGNATABLE = [
   "Assistant Principal I",
@@ -101,10 +114,24 @@ function formatDate(iso) {
 // Returns ★ badges based on admin position rank
 function getAdminStars(position) {
   if (!position) return null;
-  if (position === "Principal") return "★★★";
-  if (position === "Assistant Principal") return "★★";
+  if (
+    position.startsWith("Principal") &&
+    !position.startsWith("Assistant Principal")
+  ) {
+    return "★★★";
+  }
+  if (position.startsWith("Assistant Principal")) return "★★";
   if (position.startsWith("Head Teacher")) return "★";
   return null;
+}
+
+// Helper to determine numerical hierarchy rank for sorting
+function getAdminRank(position) {
+  if (!position) return 999;
+  const index = ADMIN_RANK_ORDER.findIndex((prefix) =>
+    position.startsWith(prefix),
+  );
+  return index !== -1 ? index : 999;
 }
 
 // ─── empty form ───────────────────────────────────────────────────────────────
@@ -354,8 +381,13 @@ export default function OrgChartPage({
     }
   };
 
-  // ── grouped views ──────────────────────────────────────────────────────────
-  const adminStaff = staff.filter((s) => s.category === "admin");
+  // ── grouped & sorted views ────────────────────────────────────────────────
+  const adminStaff = staff
+    .filter((s) => s.category === "admin")
+    .sort(
+      (a, b) => getAdminRank(a.admin_position) - getAdminRank(b.admin_position),
+    );
+
   const teachingStaff = staff.filter((s) => s.category === "teaching");
   const jobOrder = staff.filter(
     (s) => s.category === "job-order" || s.category === "non-teaching",
@@ -649,7 +681,7 @@ export default function OrgChartPage({
                   )}
                 </>
               )}
-              {/* Status — hidden for job order (they have no regular/sub distinction) */}
+              {/* Status — hidden for job order */}
               {f.category !== "job-order" && (
                 <div className="oc-field">
                   <label>Status</label>
@@ -680,8 +712,7 @@ export default function OrgChartPage({
                     </label>
                   </div>
                 </div>
-              )}{" "}
-              {/* end status conditional */}
+              )}
               {/* Substitute dates */}
               {f.status === "substitute" && f.category !== "job-order" && (
                 <div className="oc-sub-dates">

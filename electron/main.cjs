@@ -1,8 +1,7 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron')
+const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron')
 const { autoUpdater } = require('electron-updater')
 const path = require('path')
 const fs = require('fs')
-const os = require('os')
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 
@@ -29,6 +28,80 @@ function writeDB(data) {
 
 // ── Window ──
 let win
+
+function createApplicationMenu() {
+  const template = [
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'zoom' },
+        { role: 'close' }
+      ]
+    },
+    {
+      label: 'Help',
+      submenu: [
+        {
+          label: 'Check for Updates...',
+          click: () => checkForUpdatesManual()
+        },
+        { type: 'separator' },
+        {
+          label: `Version ${app.getVersion()}`,
+          enabled: false
+        }
+      ]
+    }
+  ]
+
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
+}
+
+function checkForUpdatesManual() {
+  if (isDev) {
+    dialog.showMessageBox(win, {
+      type: 'info',
+      title: 'Check for Updates',
+      message: 'Update checks are disabled in development mode.',
+    })
+    return
+  }
+
+  // Trigger manual check and inform renderer
+  win?.webContents.send('update:checking')
+  autoUpdater.checkForUpdates().catch((err) => {
+    dialog.showErrorBox('Update Check Error', err?.message || 'Failed to check for updates.')
+  })
+}
+
 function createWindow() {
   win = new BrowserWindow({
     width: 1100,
@@ -44,6 +117,8 @@ function createWindow() {
     title: 'IECES Report Admin',
     show: false
   })
+
+  createApplicationMenu()
 
   if (isDev) {
     win.webContents.openDevTools()
@@ -64,6 +139,7 @@ function createWindow() {
 
   win.once('ready-to-show', () => {
     win.show()
+    // Auto check on launch in production
     if (!isDev) {
       autoUpdater.checkForUpdatesAndNotify()
     }
@@ -75,8 +151,16 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })
 
 // ── Auto Updater Events ──
+autoUpdater.on('checking-for-update', () => {
+  win?.webContents.send('update:checking')
+})
+
 autoUpdater.on('update-available', (info) => {
   win?.webContents.send('update:available', info)
+})
+
+autoUpdater.on('update-not-available', (info) => {
+  win?.webContents.send('update:not-available', info)
 })
 
 autoUpdater.on('update-downloaded', (info) => {
