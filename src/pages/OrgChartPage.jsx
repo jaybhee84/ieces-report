@@ -450,7 +450,17 @@ export default function OrgChartPage({
                   (t) => t.grade_level === gl,
                 );
                 if (gradeTeachers.length === 0) return null;
-                const chairman = gradeTeachers.find((t) => t.is_grade_chairman);
+
+                // Sort so Grade Chairman (is_grade_chairman = true) is always first
+                const sortedGradeTeachers = [...gradeTeachers].sort((a, b) => {
+                  if (a.is_grade_chairman === b.is_grade_chairman) return 0;
+                  return a.is_grade_chairman ? -1 : 1;
+                });
+
+                const chairman = sortedGradeTeachers.find(
+                  (t) => t.is_grade_chairman,
+                );
+
                 return (
                   <div key={gl} className="oc-grade-group">
                     <div className="oc-grade-label">
@@ -461,7 +471,7 @@ export default function OrgChartPage({
                         </span>
                       )}
                     </div>
-                    {gradeTeachers.map((p) => (
+                    {sortedGradeTeachers.map((p) => (
                       <StaffCard
                         key={p.id}
                         person={p}
