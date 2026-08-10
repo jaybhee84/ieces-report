@@ -1,6 +1,6 @@
 {
   "name": "ieces-report",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "IECES Admin Report App",
   "author": "BuzzJay",
   "repository": {
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
-    "electron-updater": "^6.3.9",
+    "electron-updater": "^6.8.9",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0"
