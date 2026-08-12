@@ -68,7 +68,7 @@ const DESIGNATABLE = [
 ];
 
 const GRADE_LEVELS = [
-  "SPED",
+  "SNED",
   "Kinder",
   "Grade 1",
   "Grade 2",
@@ -343,7 +343,10 @@ export default function OrgChartPage({
       is_designated: person.is_designated || false,
       teaching_position: person.teaching_position || "Teacher I",
       teaching_type: person.teaching_type || "Adviser",
-      grade_level: person.grade_level || "Grade 1",
+      grade_level:
+        person.grade_level === "SPED"
+          ? "SNED"
+          : person.grade_level || "Grade 1",
       is_grade_chairman: person.is_grade_chairman || false,
       status: person.status || "alive",
       sub_expiry_start: person.sub_expiry_start || "",
@@ -436,7 +439,7 @@ export default function OrgChartPage({
       grade_level: form.category === "teaching" ? form.grade_level : null,
       is_grade_chairman:
         form.category === "teaching" &&
-        form.grade_level !== "SPED" &&
+        form.grade_level !== "SNED" &&
         form.teaching_type !== "ALS" &&
         form.teaching_type !== "ALIVE" &&
         form.teaching_type !== "Subject Teacher"
@@ -599,7 +602,9 @@ export default function OrgChartPage({
               {GRADE_LEVELS.map((gl) => {
                 if (gl === "ALS" || gl === "ALIVE") return null;
                 const gradeTeachers = teachingAdvisers.filter(
-                  (t) => t.grade_level === gl,
+                  (t) =>
+                    t.grade_level === gl ||
+                    (gl === "SNED" && t.grade_level === "SPED"),
                 );
                 if (gradeTeachers.length === 0) return null;
 
@@ -906,7 +911,7 @@ export default function OrgChartPage({
                     </select>
                   </div>
 
-                  {f.grade_level !== "SPED" &&
+                  {f.grade_level !== "SNED" &&
                     f.teaching_type !== "ALS" &&
                     f.teaching_type !== "ALIVE" &&
                     f.teaching_type !== "Subject Teacher" && (
