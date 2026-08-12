@@ -42,7 +42,8 @@
       {
         "provider": "github",
         "owner": "jaybhee84",
-        "repo": "ieces-report"
+        "repo": "ieces-report",
+        "releaseType": "release"
       }
     ],
     "icon": "public/prieces",
