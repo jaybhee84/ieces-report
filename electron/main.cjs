@@ -114,7 +114,7 @@ function createWindow() {
       nodeIntegration: false
     },
     titleBarStyle: 'default',
-    title: 'IECES Report Admin',
+    title: 'IECES Web Dashboard',
     show: false
   })
 

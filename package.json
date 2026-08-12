@@ -1,7 +1,7 @@
 {
   "name": "ieces-report",
-  "version": "2.0.10",
-  "description": "IECES Admin Report App",
+  "version": "3.0.0",
+  "description": "IECES Web Dashboard",
   "author": "BuzzJay",
   "repository": {
     "type": "git",
@@ -37,7 +37,7 @@
   },
   "build": {
     "appId": "com.ieces.report",
-    "productName": "IECES Report",
+    "productName": "IECES Web Dashboard",
     "publish": [
       {
         "provider": "github",

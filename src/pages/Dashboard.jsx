@@ -2,7 +2,6 @@
  * Dashboard.jsx — updated
  * Replaced "Recent MOOE" section with Org Chart module card.
  */
-import { useState } from "react";
 import Topbar from "../components/Topbar";
 import "./Dashboard.css";
 
@@ -11,9 +10,9 @@ const MODULES = [
     id: "enrollment",
     icon: "📋",
     label: "Enrollment",
-    desc: "View and manage student enrollment data per grade level and school year.",
-    badge: "wip",
-    badgeText: "🚧 Under Construction",
+    desc: "Monitor daily learner enrollment with grade-level, gender, and 4Ps breakdowns.",
+    badge: "active",
+    badgeText: "✅ Active",
   },
   {
     id: "mooe",
@@ -31,16 +30,18 @@ const MODULES = [
     badge: "active",
     badgeText: "✅ Active",
   },
+  {
+    id: "media-manager",
+    icon: "📰",
+    label: "IECES Media Manager",
+    desc: "Review and approve submitted news articles before they appear on the school website.",
+    badge: "active",
+    badgeText: "✅ Active",
+  },
 ];
 
 export default function Dashboard({ user, onLogout, onNavigate, addToast, showConfirm }) {
-  const [enrollModal, setEnrollModal] = useState(false);
-
   const handleCard = (id) => {
-    if (id === "enrollment") {
-      setEnrollModal(true);
-      return;
-    }
     onNavigate(id);
   };
 
@@ -91,27 +92,6 @@ export default function Dashboard({ user, onLogout, onNavigate, addToast, showCo
           </div>
         </div>
       </div>
-
-      {/* Enrollment WIP Modal */}
-      {enrollModal && (
-        <div className="modal-overlay" onClick={() => setEnrollModal(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-hdr">
-              <span>📋 Enrollment</span>
-              <button onClick={() => setEnrollModal(false)}>✕</button>
-            </div>
-            <div className="wip-body">
-              <div className="wip-icon">🚧</div>
-              <h3>Under Construction</h3>
-              <p>
-                Enrollment data management is currently being developed. Check
-                back on the next version.
-              </p>
-              <div className="wip-badge">Coming Soon</div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

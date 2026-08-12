@@ -68,6 +68,8 @@ const GRADE_LEVELS = [
   "Grade 4",
   "Grade 5",
   "Grade 6",
+  "ALS",
+  "ALIVE",
 ];
 
 // DepEd official teaching position ladder (EO 174 / DO 019 s.2025)
@@ -86,7 +88,7 @@ const TEACHING_POSITIONS = [
   "Master Teacher V",
 ];
 
-const TEACHING_TYPES = ["Adviser", "Subject Teacher"];
+const TEACHING_TYPES = ["Adviser", "Subject Teacher", "ALS", "ALIVE"];
 
 const JO_POSITIONS = [
   "Security Guard / Watchman",
@@ -400,7 +402,10 @@ export default function OrgChartPage({
       teaching_type: form.category === "teaching" ? form.teaching_type : null,
       grade_level: form.category === "teaching" ? form.grade_level : null,
       is_grade_chairman:
-        form.category === "teaching" && form.grade_level !== "SPED"
+        form.category === "teaching" &&
+        form.grade_level !== "SPED" &&
+        form.teaching_type !== "ALS" &&
+        form.teaching_type !== "ALIVE"
           ? form.is_grade_chairman
           : false,
       status: form.category === "job-order" ? "alive" : form.status,
@@ -513,7 +518,9 @@ export default function OrgChartPage({
               <div className="oc-section-hdr">📚 Teaching Force</div>
               {GRADE_LEVELS.map((gl) => {
                 const gradeTeachers = teachingStaff.filter(
-                  (t) => t.grade_level === gl,
+                  (t) => gl === "ALS" || gl === "ALIVE"
+                    ? t.teaching_type === gl
+                    : t.grade_level === gl && t.teaching_type !== "ALS" && t.teaching_type !== "ALIVE",
                 );
                 if (gradeTeachers.length === 0) return null;
 
@@ -742,7 +749,15 @@ export default function OrgChartPage({
                     <label>Teacher Type</label>
                     <select
                       value={f.teaching_type}
-                      onChange={(e) => set("teaching_type", e.target.value)}
+                      onChange={(e) => {
+                        const type = e.target.value;
+                        setForm((prev) => ({
+                          ...prev,
+                          teaching_type: type,
+                          grade_level: type === "ALS" || type === "ALIVE" ? type : prev.grade_level,
+                          is_grade_chairman: type === "ALS" || type === "ALIVE" ? false : prev.is_grade_chairman,
+                        }));
+                      }}
                     >
                       {TEACHING_TYPES.map((t) => (
                         <option key={t} value={t}>
@@ -757,6 +772,7 @@ export default function OrgChartPage({
                     <select
                       value={f.grade_level}
                       onChange={(e) => set("grade_level", e.target.value)}
+                      disabled={f.teaching_type === "ALS" || f.teaching_type === "ALIVE"}
                     >
                       {GRADE_LEVELS.map((g) => (
                         <option key={g} value={g}>
@@ -766,7 +782,7 @@ export default function OrgChartPage({
                     </select>
                   </div>
 
-                  {f.grade_level !== "SPED" && (
+                  {f.grade_level !== "SPED" && f.teaching_type !== "ALS" && f.teaching_type !== "ALIVE" && (
                     <div className="oc-field oc-checkbox-field">
                       <label className="oc-checkbox-label">
                         <input

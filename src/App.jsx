@@ -8,6 +8,8 @@ import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import MooePage from "./pages/MooePage";
 import OrgChartPage from "./pages/OrgChartPage";
+import MediaManagerPage from "./pages/MediaManagerPage";
+import EnrollmentPage from "./pages/EnrollmentPage";
 import SplashScreen from "./components/SplashScreen";
 import "./App.css";
 
@@ -196,6 +198,24 @@ export default function App() {
 
       {page === "orgchart" && session && (
         <OrgChartPage
+          onBack={() => setPage("dashboard")}
+          onLogout={handleLogout}
+          user={session?.user}
+          {...sharedProps}
+        />
+      )}
+
+      {page === "enrollment" && session && (
+        <EnrollmentPage
+          onBack={() => setPage("dashboard")}
+          onLogout={handleLogout}
+          user={session?.user}
+          {...sharedProps}
+        />
+      )}
+
+      {page === "media-manager" && session && (
+        <MediaManagerPage
           onBack={() => setPage("dashboard")}
           onLogout={handleLogout}
           user={session?.user}

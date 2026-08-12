@@ -1,0 +1,60 @@
+.enrollment-root { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: #f7f3f1; }
+.enrollment-body { flex: 1; width: 100%; overflow-y: auto; padding: 30px max(20px, calc((100% - 1100px) / 2)) 50px; scrollbar-gutter: stable; }
+.enrollment-body::-webkit-scrollbar { width: 11px; }
+.enrollment-body::-webkit-scrollbar-track { background: #eee5e1; }
+.enrollment-body::-webkit-scrollbar-thumb { background: #9b5555; border: 2px solid #eee5e1; border-radius: 10px; }
+.enrollment-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+.enrollment-heading h1 { margin: 0 0 5px; color: #7b1a1a; font-size: 1.35rem; }
+.enrollment-heading p, .panel-title p { margin: 0; color: #7a6060; font-size: .8rem; }
+.enrollment-heading button { padding: 8px 16px; border: 1px solid #7b1a1a; border-radius: 8px; background: white; color: #7b1a1a; font-weight: 800; cursor: pointer; }
+.enrollment-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.enrollment-stats div { padding: 18px; border-radius: 12px; background: white; border-top: 3px solid #7b1a1a; box-shadow: 0 2px 12px rgba(123,26,26,.07); }
+.enrollment-stats span { display: block; min-height: 30px; color: #806868; font-size: .7rem; font-weight: 700; }
+.enrollment-stats strong { color: #7b1a1a; font-size: 1.7rem; }
+.enrollment-panel { margin-bottom: 18px; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 2px 14px rgba(123,26,26,.07); }
+.advisory-highlight { border: 2px solid #e2c36b; }
+.panel-title { display: flex; justify-content: space-between; margin-bottom: 15px; }
+.panel-title h2 { margin: 0 0 4px; color: #491919; font-size: 1rem; }
+.daily-table-wrap { overflow-x: auto; }
+.enrollment-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+.enrollment-table th { padding: 10px 12px; text-align: center; color: #6b4a4a; background: #f4ece8; border-bottom: 1px solid #dfd1cb; }
+.enrollment-table th:first-child, .enrollment-table td:first-child { text-align: left; }
+.enrollment-table td { padding: 10px 12px; text-align: center; color: #695353; border-bottom: 1px solid #eee5e1; }
+.daily-table tbody tr { cursor: pointer; }
+.daily-table tbody tr:hover, .daily-table tbody tr.selected { background: #fff4e6; }
+.advisory-groups { display: grid; gap: 15px; }
+.advisory-grade-group { overflow: hidden; border: 1px solid #e3d4ce; border-radius: 10px; }
+.advisory-grade-heading { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; color: white; background: #7b1a1a; }
+.advisory-grade-heading h3 { margin: 0; font-size: .83rem; text-transform: uppercase; }.advisory-grade-heading span { font-size: .68rem; font-weight: 700; opacity: .85; }
+.adviser-list { background: #fff; }.adviser-row { display: flex; align-items: center; gap: 12px; min-height: 76px; padding: 10px 14px; border-bottom: 1px solid #eee5e1; cursor: pointer; }.adviser-row:last-child { border-bottom: 0; }.adviser-row:hover { background: #fff7ec; }.adviser-row.chairman { background: #fff9df; border-left: 4px solid #e2b628; }
+.adviser-row img, .adviser-avatar { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 50%; object-fit: cover; }.adviser-avatar { display: grid; place-items: center; background: #eee5e1; }
+.adviser-identity { flex: 1; min-width: 0; }.adviser-identity strong, .adviser-identity span, .adviser-identity small { display: block; }.adviser-identity strong { color: #491919; font-size: .85rem; }.adviser-identity span { overflow: hidden; color: #7d6565; font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }.adviser-identity small { margin-top: 2px; color: #9a8585; font-size: .63rem; }
+.chairman-badge { padding: 5px 9px; border-radius: 14px; color: #7a5600; background: #f9e58d; font-size: .63rem; font-weight: 800; }
+.adviser-total { min-width: 65px; text-align: center; }.adviser-total strong, .adviser-total span { display: block; }.adviser-total strong { color: #7b1a1a; font-size: 1.25rem; }.adviser-total span { color: #927979; font-size: .6rem; text-transform: uppercase; }
+.adviser-empty { padding: 18px; color: #a08c8c; font-size: .72rem; font-style: italic; }
+.enrollment-table tfoot th { border-top: 2px solid #c9aaa0; }
+.grade-live-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.grade-live-card { padding: 14px; border: 1px solid #e6d9d4; border-radius: 9px; background: #fcfaf9; }
+.grade-live-card span, .grade-live-card small { display: block; color: #806868; font-size: .68rem; font-weight: 700; }
+.grade-live-card strong { display: block; margin: 5px 0; color: #7b1a1a; font-size: 1.4rem; }
+.demographic-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
+.demographic-card { padding: 15px; border: 1px solid #e6d9d4; border-radius: 10px; background: #fcfaf9; }
+.demographic-card h3 { margin: 0 0 10px; color: #7b1a1a; font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
+.demographic-row { display: flex; justify-content: space-between; gap: 15px; padding: 7px 2px; color: #6d5656; font-size: .75rem; border-bottom: 1px solid #eee5e1; }
+.demographic-row:last-child { border-bottom: 0; }
+.demographic-row strong { color: #421818; }
+.enrollment-message, .enrollment-empty { padding: 35px; text-align: center; color: #7a6060; background: white; border: 1px dashed #d9c9c3; border-radius: 12px; }
+.enrollment-message.error { color: #991b1b; background: #fff1f2; border-style: solid; }
+.roster-overlay { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 22px; background: rgba(30,10,10,.6); }
+.roster-modal { display: flex; flex-direction: column; width: min(1000px, 100%); max-height: 90vh; overflow: hidden; background: #f7f3f1; border-radius: 14px; box-shadow: 0 25px 80px rgba(0,0,0,.3); }
+.roster-modal > header { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; color: white; background: #7b1a1a; border-bottom: 3px solid #f5c518; }
+.roster-modal header h2 { margin: 0 0 3px; font-size: 1.05rem; }.roster-modal header p { margin: 0; font-size: .72rem; opacity: .85; }
+.roster-modal header button { width: 32px; height: 32px; border: 0; border-radius: 50%; color: white; background: rgba(255,255,255,.15); cursor: pointer; }
+.roster-body { overflow-y: auto; padding: 18px; }
+.learner-record { margin-bottom: 14px; padding: 17px; border-radius: 11px; background: white; box-shadow: 0 2px 10px rgba(123,26,26,.07); }
+.learner-record-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #eee5e1; }
+.learner-record-heading img { width: 58px; height: 58px; object-fit: cover; border-radius: 50%; }.learner-record-heading h3 { margin: 0 0 3px; color: #571919; font-size: .92rem; }.learner-record-heading p { margin: 0; color: #806868; font-size: .7rem; }
+.learner-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }.learner-fields div { min-width: 0; }.learner-fields span { display: block; color: #947d7d; font-size: .62rem; text-transform: uppercase; }.learner-fields strong { display: block; overflow-wrap: anywhere; color: #402020; font-size: .72rem; margin-top: 2px; }
+@media (max-width: 800px) { .enrollment-stats, .grade-live-grid { grid-template-columns: repeat(2, 1fr); } .demographic-grid { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .enrollment-body { padding-left: 12px; padding-right: 12px; } .enrollment-stats, .demographic-grid { grid-template-columns: 1fr; } }
+@media (max-width: 650px) { .learner-fields { grid-template-columns: 1fr 1fr; } .roster-overlay { padding: 10px; } }
