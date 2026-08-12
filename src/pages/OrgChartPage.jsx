@@ -14,6 +14,7 @@ const BUCKET = "org-photos";
 const TABLE = "org_chart";
 
 const ADMIN_POSITIONS = [
+  "Public Schools District Supervisor (PSDS)",
   "Principal I",
   "Principal II",
   "Principal III",
@@ -25,6 +26,7 @@ const ADMIN_POSITIONS = [
   "Head Teacher IV",
   "Head Teacher V",
   "Head Teacher VI",
+  "ALS Coordinator",
   "Nurse II",
   "Administrative Officer II (AO II)",
   "Planning & Development Officer I (PDO I)",
@@ -35,8 +37,10 @@ const ADMIN_POSITIONS = [
 
 // Custom hierarchy rank order for Admin positions
 const ADMIN_RANK_ORDER = [
+  "Public Schools District Supervisor",
   "Principal",
   "Assistant Principal",
+  "ALS Coordinator",
   "Head Teacher",
   "Nurse",
   "Administrative Officer",
@@ -48,9 +52,13 @@ const ADMIN_RANK_ORDER = [
 
 // Positions that can be "designated" (acting, not permanent)
 const DESIGNATABLE = [
+  "Assistant Principal",
   "Assistant Principal I",
   "Assistant Principal II",
   "Principal I",
+  "Principal II",
+  "Principal III",
+  "Principal IV",
   "Head Teacher I",
   "Head Teacher II",
   "Head Teacher III",
@@ -94,6 +102,17 @@ const JO_POSITIONS = [
   "Security Guard / Watchman",
   "Utility Worker",
   "Administrative Aide",
+];
+
+const SUPPORT_POSITIONS = [
+  "Nurse II",
+  "Administrative Officer II (AO II)",
+  "Planning & Development Officer I (PDO I)",
+  "Administrative Assistant III (Senior Bookkeeper)",
+  "Administrative Assistant II (Disbursing Officer)",
+  "Administrative Aide",
+  "Security Guard / Watchman",
+  "Utility Worker",
 ];
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -182,12 +201,23 @@ function getAdminRank(position) {
   return index !== -1 ? index : 999;
 }
 
+function normalizedRole(person) {
+  return `${person.teaching_type || ""} ${person.admin_position || ""}`
+    .trim()
+    .toLowerCase();
+}
+
+function hasRole(person, terms) {
+  const role = normalizedRole(person);
+  return terms.some((term) => role.includes(term));
+}
+
 // ─── empty form ───────────────────────────────────────────────────────────────
 const EMPTY = {
   family_name: "",
   first_name: "",
   middle_name: "",
-  category: "teaching", // admin | teaching | job-order
+  category: "teaching", // admin | teaching | non-teaching | job-order
   admin_position: "",
   is_designated: false,
   teaching_position: "Teacher I",
@@ -348,8 +378,11 @@ export default function OrgChartPage({
       addToast("Select an admin position.", "warning");
       return;
     }
-    if (form.category === "job-order" && !form.admin_position) {
-      addToast("Select a job order position.", "warning");
+    if (
+      (form.category === "job-order" || form.category === "non-teaching") &&
+      !form.admin_position
+    ) {
+      addToast("Select a support staff position.", "warning");
       return;
     }
     if (
@@ -405,7 +438,8 @@ export default function OrgChartPage({
         form.category === "teaching" &&
         form.grade_level !== "SPED" &&
         form.teaching_type !== "ALS" &&
-        form.teaching_type !== "ALIVE"
+        form.teaching_type !== "ALIVE" &&
+        form.teaching_type !== "Subject Teacher"
           ? form.is_grade_chairman
           : false,
       status: form.category === "job-order" ? "alive" : form.status,
@@ -453,15 +487,43 @@ export default function OrgChartPage({
   };
 
   // ── grouped & sorted views ────────────────────────────────────────────────
-  const adminStaff = staff
-    .filter((s) => s.category === "admin")
+  const substitutes = staff.filter((s) => s.status === "substitute");
+  const activeStaff = staff.filter((s) => s.status !== "substitute");
+  const districtSupervisors = activeStaff.filter((s) =>
+    hasRole(s, ["psds", "public schools district supervisor", "public school district supervisor"]),
+  );
+  const alsCoordinators = activeStaff.filter((s) =>
+    hasRole(s, ["als coordinator", "alternative learning system coordinator"]),
+  );
+  const specialRoleIds = new Set([
+    ...districtSupervisors.map((s) => s.id),
+    ...alsCoordinators.map((s) => s.id),
+  ]);
+  const adminStaff = activeStaff
+    .filter((s) => s.category === "admin" && !specialRoleIds.has(s.id))
     .sort(
       (a, b) => getAdminRank(a.admin_position) - getAdminRank(b.admin_position),
     );
 
-  const teachingStaff = staff.filter((s) => s.category === "teaching");
-  const jobOrder = staff.filter(
+  const teachingStaff = activeStaff.filter(
+    (s) => s.category === "teaching" && !specialRoleIds.has(s.id),
+  );
+  const teachingAdvisers = teachingStaff.filter(
+    (s) => !hasRole(s, ["als", "alive", "subject"]),
+  );
+  const subjectTeachers = teachingStaff.filter((s) =>
+    hasRole(s, ["subject"]),
+  );
+  const alsTeachers = teachingStaff.filter((s) => hasRole(s, ["als"]));
+  const aliveTeachers = teachingStaff.filter((s) => hasRole(s, ["alive"]));
+  const supportStaff = activeStaff.filter(
     (s) => s.category === "job-order" || s.category === "non-teaching",
+  );
+  const watchmenAndUtility = supportStaff.filter((s) =>
+    hasRole(s, ["watchman", "watchmen", "security", "utility", "janitor", "custodian"]),
+  );
+  const otherSupport = supportStaff.filter(
+    (s) => !watchmenAndUtility.some((person) => person.id === s.id),
   );
 
   const f = form;
@@ -496,9 +558,18 @@ export default function OrgChartPage({
           <div className="oc-loading">Loading staff…</div>
         ) : (
           <>
+            {districtSupervisors.length > 0 && (
+              <div className="oc-section">
+                <div className="oc-section-hdr">District Supervision</div>
+                {districtSupervisors.map((p) => (
+                  <StaffCard key={p.id} person={p} onEdit={openEdit} onDelete={handleDelete} />
+                ))}
+              </div>
+            )}
+
             {/* ADMIN */}
             <div className="oc-section">
-              <div className="oc-section-hdr">🏫 School Administration</div>
+              <div className="oc-section-hdr">School Administration</div>
               {adminStaff.length === 0 ? (
                 <div className="oc-empty">No admin staff added yet.</div>
               ) : (
@@ -513,14 +584,22 @@ export default function OrgChartPage({
               )}
             </div>
 
+            {alsCoordinators.length > 0 && (
+              <div className="oc-section">
+                <div className="oc-section-hdr">ALS Coordination</div>
+                {alsCoordinators.map((p) => (
+                  <StaffCard key={p.id} person={p} onEdit={openEdit} onDelete={handleDelete} />
+                ))}
+              </div>
+            )}
+
             {/* TEACHING by grade */}
             <div className="oc-section">
-              <div className="oc-section-hdr">📚 Teaching Force</div>
+              <div className="oc-section-hdr">Teaching Advisers</div>
               {GRADE_LEVELS.map((gl) => {
-                const gradeTeachers = teachingStaff.filter(
-                  (t) => gl === "ALS" || gl === "ALIVE"
-                    ? t.teaching_type === gl
-                    : t.grade_level === gl && t.teaching_type !== "ALS" && t.teaching_type !== "ALIVE",
+                if (gl === "ALS" || gl === "ALIVE") return null;
+                const gradeTeachers = teachingAdvisers.filter(
+                  (t) => t.grade_level === gl,
                 );
                 if (gradeTeachers.length === 0) return null;
 
@@ -559,22 +638,61 @@ export default function OrgChartPage({
               )}
             </div>
 
-            {/* JOB ORDER */}
+            {subjectTeachers.length > 0 && (
+              <div className="oc-section">
+                <div className="oc-section-hdr">Subject Teachers</div>
+                {subjectTeachers.map((p) => (
+                  <StaffCard key={p.id} person={p} onEdit={openEdit} onDelete={handleDelete} />
+                ))}
+              </div>
+            )}
+
+            {alsTeachers.length > 0 && (
+              <div className="oc-section">
+                <div className="oc-section-hdr">Alternative Learning System (ALS)</div>
+                {alsTeachers.map((p) => (
+                  <StaffCard key={p.id} person={p} onEdit={openEdit} onDelete={handleDelete} />
+                ))}
+              </div>
+            )}
+
+            {aliveTeachers.length > 0 && (
+              <div className="oc-section">
+                <div className="oc-section-hdr">ALIVE</div>
+                {aliveTeachers.map((p) => (
+                  <StaffCard key={p.id} person={p} onEdit={openEdit} onDelete={handleDelete} />
+                ))}
+              </div>
+            )}
+
+            {substitutes.length > 0 && (
+              <div className="oc-section">
+                <div className="oc-section-hdr">Substitute Teachers</div>
+                {substitutes.map((p) => (
+                  <StaffCard key={p.id} person={p} onEdit={openEdit} onDelete={handleDelete} />
+                ))}
+              </div>
+            )}
+
             <div className="oc-section">
-              <div className="oc-section-hdr">🔧 Job Order Staff</div>
-              {jobOrder.length === 0 ? (
-                <div className="oc-empty">No job order staff added yet.</div>
+              <div className="oc-section-hdr">Support Staff</div>
+              {otherSupport.length === 0 ? (
+                <div className="oc-empty">No support staff added yet.</div>
               ) : (
-                jobOrder.map((p) => (
-                  <StaffCard
-                    key={p.id}
-                    person={p}
-                    onEdit={openEdit}
-                    onDelete={handleDelete}
-                  />
+                otherSupport.map((p) => (
+                  <StaffCard key={p.id} person={p} onEdit={openEdit} onDelete={handleDelete} />
                 ))
               )}
             </div>
+
+            {watchmenAndUtility.length > 0 && (
+              <div className="oc-section">
+                <div className="oc-section-hdr">Watchmen &amp; Utility Workers</div>
+                {watchmenAndUtility.map((p) => (
+                  <StaffCard key={p.id} person={p} onEdit={openEdit} onDelete={handleDelete} />
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -672,12 +790,15 @@ export default function OrgChartPage({
                 >
                   <option value="admin">Administration</option>
                   <option value="teaching">Teaching</option>
+                  <option value="non-teaching">Non-Teaching / Support Staff</option>
                   <option value="job-order">Job Order</option>
                 </select>
               </div>
 
               {/* Admin Position */}
-              {(f.category === "admin" || f.category === "job-order") && (
+              {(f.category === "admin" ||
+                f.category === "non-teaching" ||
+                f.category === "job-order") && (
                 <div className="oc-field">
                   <label>Position *</label>
                   {f.category === "admin" ? (
@@ -698,7 +819,7 @@ export default function OrgChartPage({
                       onChange={(e) => set("admin_position", e.target.value)}
                     >
                       <option value="">— Select position —</option>
-                      {JO_POSITIONS.map((p) => (
+                      {(f.category === "non-teaching" ? SUPPORT_POSITIONS : JO_POSITIONS).map((p) => (
                         <option key={p} value={p}>
                           {p}
                         </option>
@@ -755,7 +876,10 @@ export default function OrgChartPage({
                           ...prev,
                           teaching_type: type,
                           grade_level: type === "ALS" || type === "ALIVE" ? type : prev.grade_level,
-                          is_grade_chairman: type === "ALS" || type === "ALIVE" ? false : prev.is_grade_chairman,
+                          is_grade_chairman:
+                            type === "ALS" || type === "ALIVE" || type === "Subject Teacher"
+                              ? false
+                              : prev.is_grade_chairman,
                         }));
                       }}
                     >
@@ -782,7 +906,10 @@ export default function OrgChartPage({
                     </select>
                   </div>
 
-                  {f.grade_level !== "SPED" && f.teaching_type !== "ALS" && f.teaching_type !== "ALIVE" && (
+                  {f.grade_level !== "SPED" &&
+                    f.teaching_type !== "ALS" &&
+                    f.teaching_type !== "ALIVE" &&
+                    f.teaching_type !== "Subject Teacher" && (
                     <div className="oc-field oc-checkbox-field">
                       <label className="oc-checkbox-label">
                         <input
