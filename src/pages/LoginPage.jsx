@@ -197,23 +197,27 @@ function RegisterForm({ onGoLogin }) {
 
     setLoading(true);
 
-    const { data: allowed, error: allowErr } = await supabase
-      .from("allowed_users")
-      .select("email")
-      .eq("email", form.email.trim().toLowerCase())
-      .single();
+    const normalizedEmail = form.email.trim().toLowerCase();
 
-    if (allowErr || !allowed) {
+    // 1. Check report_allowed_users (set by Dashboard Manager)
+    const { data: allowed } = await supabase
+      .from("report_allowed_users")
+      .select("email")
+      .eq("email", normalizedEmail)
+      .maybeSingle();
+
+    if (!allowed) {
       setError("Email not authorized to register. Contact your administrator.");
       setLoading(false);
       return;
     }
 
+    // 2. Check username uniqueness in profiles
     const { data: existingUser } = await supabase
       .from("profiles")
       .select("username")
       .eq("username", form.username.trim())
-      .single();
+      .maybeSingle();
 
     if (existingUser) {
       setError("Username is already taken.");
@@ -221,28 +225,24 @@ function RegisterForm({ onGoLogin }) {
       return;
     }
 
-    const { data: authData, error: authErr } = await supabase.auth.signUp({
-      email: form.email.trim().toLowerCase(),
-      password: form.password,
-    });
+    // 3. Register via edge function — handles email already in auth (shared
+    //    across apps) by reusing the existing auth.users record.
+    const { data: fnData, error: fnErr } = await supabase.functions.invoke(
+      "report-register",
+      {
+        body: {
+          email: normalizedEmail,
+          password: form.password,
+          username: form.username.trim(),
+          family_name: form.familyName.trim(),
+          first_name: form.firstName.trim(),
+          middle_initial: form.middleInitial.trim() || null,
+        },
+      }
+    );
 
-    if (authErr) {
-      setError(authErr.message);
-      setLoading(false);
-      return;
-    }
-
-    const { error: profileErr } = await supabase.from("profiles").insert({
-      id: authData.user.id,
-      email: form.email.trim().toLowerCase(),
-      username: form.username.trim(),
-      family_name: form.familyName.trim(),
-      first_name: form.firstName.trim(),
-      middle_initial: form.middleInitial.trim() || null,
-    });
-
-    if (profileErr) {
-      setError("Profile creation failed: " + profileErr.message);
+    if (fnErr || fnData?.error) {
+      setError(fnData?.error || fnErr?.message || "Registration failed.");
       setLoading(false);
       return;
     }
